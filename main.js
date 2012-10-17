@@ -26,6 +26,10 @@ var optimist = require('optimist')
         .describe('gd', 'How long it took to generate the batches (in ms).')
         .default('gd', 1)
 
+        .alias('dc', 'dataload-concurrent-batches')
+        .describe('dc', 'The number of concurrent batches that were loaded.')
+        .default('dc', 1)
+
         .alias('dd', 'dataload-duration')
         .describe('dd', 'How load it took the load the batches into the system (in ms).')
         .default('dd', 1)
@@ -42,13 +46,13 @@ var optimist = require('optimist')
 var argv = optimist.argv;
 
 /**
- * Converts a duration in ms to a pretty string.
- * @param  {Number} duration The duration in ms.
+ * Converts a duration in seconds to a pretty string.
+ * @param  {Number} duration The duration in seconds.
  * @return {String}          The duration as a string.
- *                           ex: 1500 would be converted to 1.5 seconds.
+ *                           ex: 1500 would be converted to 25m 0s.
  */
 var prettyTime = function(duration) {
-    var seconds = Math.round(duration / 1000);
+    var seconds = duration;
     var minutes = null;
     var hours = null;
     if (seconds > 60) {
@@ -83,7 +87,8 @@ stats.generation.duration = prettyTime(argv['generation-duration']);
 stats.dataload = {};
 stats.dataload.duration = prettyTime(argv['dataload-duration']);
 stats.dataload.requests = argv['dataload-requests'];
-stats.dataload.requestsPerSecond = stats.dataload.requests / (argv['dataload-duration'] / 1000);
+stats.dataload.concurrentBatches = argv['dataload-concurrent-batches'];
+stats.dataload.requestsPerSecond = stats.dataload.requests / (argv['dataload-duration']);
 
 stats.tsung = {};
 stats.tsung.report = argv['tsung-report'];

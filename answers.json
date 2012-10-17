@@ -1,0 +1,43 @@
+{
+    "suite": "standard",
+    "clients": ["localhost"],
+    "servers": ["t1.oae-performance.sakaiproject.org:80"],
+    "phases": [
+        {
+            "durationUnit": "minute",
+            "duration": 1,
+            "arrivalUnit": "second",
+            "arrival": 1
+        },
+        {
+            "durationUnit": "minute",
+            "duration": 1,
+            "arrivalUnit": "second",
+            "arrival": 2
+        },
+        {
+            "durationUnit": "minute",
+            "duration": 1,
+            "arrivalUnit": "second",
+            "arrival": 4
+        },
+        {
+            "durationUnit": "minute",
+            "duration": 1,
+            "arrivalUnit": "second",
+            "arrival": 8
+        },
+        {
+            "durationUnit": "minute",
+            "duration": 1,
+            "arrivalUnit": "second",
+            "arrival": 16
+        },
+        {
+            "durationUnit": "minute",
+            "duration": 1,
+            "arrivalUnit": "second",
+            "arrival": 32
+        }
+    ]
+}
