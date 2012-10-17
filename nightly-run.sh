@@ -151,4 +151,4 @@ echo "Tsung suite ended at " `date`
 
 # Generate some simple stats.
 cd ~/oae-nightly-stats
-#node main.js -b ${LOAD_NR_OF_BATCHES} -u ${LOAD_NR_OF_USERS} -g ${LOAD_NR_OF_GROUPS} -c ${LOAD_NR_OF_CONTENT} --generation-duration ${GENERATION_DURATION} --dataload-requests 30000 --dataload-duration ${LOAD_D} --tsung-report tsung/2012/report.hmtl > stats.html
+node main.js -b ${LOAD_NR_OF_BATCHES} -u ${LOAD_NR_OF_USERS} -g ${LOAD_NR_OF_GROUPS} -c ${LOAD_NR_OF_CONTENT} --generation-duration ${GENERATION_DURATION} --dataload-requests 30000 --dataload-duration ${LOAD_DURATION} --tsung-report ${TSUNG_LOG_DIR}report.hmtl > ${LOG_DIR}/stats.html

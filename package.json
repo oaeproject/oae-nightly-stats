@@ -3,8 +3,10 @@
     "version": "0.0.1",
     "main": "main.js",
     "dependencies": {
+        "cheerio": "latest",
         "mu2": "latest",
         "optimist": "latest",
-        "redis": "latest"
+        "redis": "latest",
+        "request": "latest"
     }
 }

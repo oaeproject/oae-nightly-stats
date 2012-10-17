@@ -191,7 +191,17 @@ If you shoot us an e-mail we'll add you.</p>
 
 <h2>Tsung tests</h2>
 <p>After each dataload a <a href="http://tsung.erlang-projects.org/">tsung</a> benchmark is run. This simulates a bunch of concurrent users who are clicking trough the application.</p>
-<p>Have a look at the <a href="{{ tsung.report }}">report</a>.</p>
+<table>
+    <tr>
+        <td class="metric">Highest requests/sec</td>
+        <td>{{ tsung.highestRate }}</td>
+    </tr>
+    <tr>
+        <td class="metric">Mean request time</td>
+        <td>{{ tsung.meanRequestTime }}</td>
+    </tr>
+</table>
+<p>More details are available in the <a href="{{ tsung.report }}">report</a>.</p>
 
 </body>
 </html>

@@ -1,5 +1,8 @@
+var cheerio = require('cheerio');
+var fs = require('fs');
 var mu = require('mu2');
 var redis = require('redis');
+var request = require('request');
 var optimist = require('optimist')
         .usage('Usage: $0')
 
@@ -43,7 +46,16 @@ var optimist = require('optimist')
         .default('tr', './tsung/report.html');
 
 
-var argv = optimist.argv;
+
+
+var pushToCirconus = function(data, callback) {
+    request({
+            'method': 'PUT',
+            'uri': 'https://trap.noit.circonus.net/module/httptrap/5655b0c9-5246-68b3-e456-edfb512d4ea1/mys3cr3t',
+            'body': JSON.stringify(data)
+        }, callback);
+};
+
 
 /**
  * Converts a duration in seconds to a pretty string.
@@ -74,6 +86,26 @@ var prettyTime = function(duration) {
     return str;
 };
 
+/**
+ * Converts a string to milliseconds.
+ * @param  {String} str A string of the form '32sec'
+ * @return {Number}     The amount of time in milliseconds.
+ */
+var stringToMillis = function(str) {
+    // Convert it to a number
+    var value = parseFloat(str);
+    // Get it in ms.
+    if (str.split(' ')[1] === 'sec') {
+        value *= 1000;
+    } else if (str.split(' ')[1] === 'mn') {
+        value *= 60000;
+    }
+    return value;
+};
+
+
+
+var argv = optimist.argv;
 
 // Get the stats
 var stats = {};
@@ -90,8 +122,6 @@ stats.dataload.requests = argv['dataload-requests'];
 stats.dataload.concurrentBatches = argv['dataload-concurrent-batches'];
 stats.dataload.requestsPerSecond = stats.dataload.requests / (argv['dataload-duration']);
 
-stats.tsung = {};
-stats.tsung.report = argv['tsung-report'];
 
 
 // Get some stats from Cassandra.
@@ -105,6 +135,64 @@ client.hget('telemetry', 'cassandra.write', function(err, data) {
 });
 
 
+// Parse the tsung stats.
+stats.tsung = {};
+stats.tsung.report = argv['tsung-report'];
+var tsungHTML = fs.readFileSync(stats.tsung.report, 'UTF-8');
+var $ = cheerio.load(tsungHTML);
+
+
+// Get the highest rate of requests/sec
+var rows = $('div#stats table.stats').find('tr');
+stats.tsung.highestRate = parseFloat(rows["3"].children[7].children[0].data);
+stats.tsung.meanRequestTime = stringToMillis(rows["3"].children[9].children[0].data);
+
+stats.tsung.transactions = {};
+var transactionRows = $('div#transaction table.stats').find('tr');
+for (var i = 1; i < transactionRows.length;i++) {
+    var name = transactionRows["" + i].children[1].children[0].data;
+    var highestTenMean = transactionRows["" + i].children[3].children[0].data;
+    var mean = transactionRows["" + i].children[9].children[0].data;
+    stats.tsung.transactions[name] = {
+        'mean': mean,
+        'highestTenMean': highestTenMean
+    };
+}
+
+stats.tsung.codes = {};
+var codes = [200, 201, 401, 404, 500, 502];
+for (var i = 0; i < codes.length; i++) {
+    var row = $('td:contains("' + codes[i] + '")')['0'];
+    if (row) {
+        var rate = parseFloat(row.next.next.children[0].data);
+        var counts = parseInt(row.next.next.next.next.children[0].data, 10);
+        stats.tsung.codes[codes[i]] = {
+            'rate': rate,
+            'counts': counts
+        };
+    }
+}
+
+// The data we wish to push to circonus
+var circonusData = {
+    'nightly': {
+        'codes': {},
+        'highestRate': {'_type': 'n', '_value': stats.tsung.highestRate},
+        'meanRequestTime': {'_type': 'n', '_value': stats.tsung.meanRequestTime}
+    }
+};
+for (var code in stats.tsung.codes) {
+    circonusData.nightly.codes[code] = {
+        'rate': {'_type': 'n', '_value': stats.tsung.codes[code].rate},
+        'counts': {'_type': 'n', '_value': stats.tsung.codes[code].counts}
+    };
+}
+circonusData.nightly.codes[500] = {
+        'rate': {'_type': 'n', '_value': 20},
+        'counts': {'_type': 'n', '_value': 30}
+    };
+
+
 setTimeout(function() {
     // Generate a pretty HTML file with moustache.
     mu.root = __dirname + '/templates'
@@ -113,6 +201,10 @@ setTimeout(function() {
             console.log(data.toString());
         })
         .on('end', function() {
-            process.exit(0);
+            // Push stuff to Circonus
+            pushToCirconus(circonusData, function(err, response, body) {
+                process.exit();
+            });
         });
 }, 2000);
+
