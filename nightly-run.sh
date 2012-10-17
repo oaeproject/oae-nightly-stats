@@ -98,6 +98,7 @@ node generate.js -b ${LOAD_NR_OF_BATCHES} -t ${LOAD_TENANT} -u ${LOAD_NR_OF_USER
 tar cvzf scripts.tar.gz scripts
 mv scripts.tar.gz ${LOG_DIR}
 END=`date +%s`
+GENERATION_DURATION=$(($END - $START));
 curl -H "X-Circonus-Auth-Token: ${CIRCONUS_AUTH_TOKEN}" -H "X-Circonus-App-Name: ${CIRCONUS_APP_NAME}" -d"annotations=[{\"title\": \"Data generation\", \"description\": \"Generating fake users, groups, content\", \"category\": \"nightly\", \"start\": ${START}, \"stop\": ${END} }]"  https://circonus.com/api/json/annotation
 echo "Data generation ended at: " `date`
 
@@ -109,6 +110,7 @@ START=`date +%s`
 echo "Load started at: " `date`
 node loaddata.js -s 0 -b ${LOAD_NR_OF_BATCHES} -c ${LOAD_NR_OF_CONCURRENT_BATCHES} -h http://t1.oae-performance.sakaiproject.org > ${LOG_DIR}/loaddata.txt 2>&1
 END=`date +%s`
+LOAD_DURATION=$(($END - $START));
 curl -H "X-Circonus-Auth-Token: ${CIRCONUS_AUTH_TOKEN}" -H "X-Circonus-App-Name: ${CIRCONUS_APP_NAME}" -d"annotations=[{\"title\": \"Data load\", \"description\": \"Loading the generated data into the system.\", \"category\": \"nightly\", \"start\": ${START}, \"stop\": ${END} }]"  https://circonus.com/api/json/annotation
 echo "Load ended at: " `date`
 
@@ -143,3 +145,10 @@ cd $TSUNG_LOG_DIR
 END=`date +%s`
 curl -H "X-Circonus-Auth-Token: ${CIRCONUS_AUTH_TOKEN}" -H "X-Circonus-App-Name: ${CIRCONUS_APP_NAME}" -d"annotations=[{\"title\": \"Performance test\", \"description\": \"The tsung tests hitting the various endpoints.\", \"category\": \"nightly\", \"start\": ${START}, \"stop\": ${END} }]"  https://circonus.com/api/json/annotation
 echo "Tsung suite ended at " `date`
+
+
+
+
+# Generate some simple stats.
+cd ~/oae-nightly-stats
+#node main.js -b ${LOAD_NR_OF_BATCHES} -u ${LOAD_NR_OF_USERS} -g ${LOAD_NR_OF_GROUPS} -c ${LOAD_NR_OF_CONTENT} --generation-duration ${GENERATION_DURATION} --dataload-requests 30000 --dataload-duration ${LOAD_D} --tsung-report tsung/2012/report.hmtl > stats.html
