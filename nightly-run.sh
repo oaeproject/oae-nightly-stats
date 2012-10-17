@@ -30,35 +30,35 @@ exec &> "${LOG_DIR}/nightly.txt"
 
 
 if $START_CLEAN ; then
-                # Clean up the performance environment.
-                # This involves ssh'ing into each machine and running the respective
-                # clean scripts.
+        # Clean up the performance environment.
+        # This involves ssh'ing into each machine and running the respective
+        # clean scripts.
 
-                # Clean the db nodes first.
-                # Stop the entire cassandra cluster
-                # Run this first so we don't run the risk that the 2 other nodes start distributing data of the first node
-                ssh -t root@10.112.4.124 /sbin/service cassandra stop
-                ssh -t root@10.112.4.125 /sbin/service cassandra stop
-                ssh -t root@10.112.4.126 /sbin/service cassandra stop
+        # Clean the db nodes first.
+        # Stop the entire cassandra cluster
+        # Run this first so we don't run the risk that the 2 other nodes start distributing data of the first node
+        ssh -t root@10.112.4.124 /sbin/service cassandra stop
+        ssh -t root@10.112.4.125 /sbin/service cassandra stop
+        ssh -t root@10.112.4.126 /sbin/service cassandra stop
 
-                # Wipe data of each cassandra node
-                # A snapshot will restore about 40 batches worth of data.
-                ssh -t root@10.112.4.124 /root/puppet-hilary/clean-scripts/dbnode.sh
-                ssh -t root@10.112.4.125 /root/puppet-hilary/clean-scripts/dbnode.sh
-                ssh -t root@10.112.4.126 /root/puppet-hilary/clean-scripts/dbnode.sh
+        # Wipe data of each cassandra node
+        # A snapshot will restore about 40 batches worth of data.
+        ssh -t root@10.112.4.124 /root/puppet-hilary/clean-scripts/dbnode.sh
+        ssh -t root@10.112.4.125 /root/puppet-hilary/clean-scripts/dbnode.sh
+        ssh -t root@10.112.4.126 /root/puppet-hilary/clean-scripts/dbnode.sh
 
-                # Clean the app nodes.
-                # Because npm requires all sorts of things we source the .profile
-                # so the PATH variable gets set.
-                ssh -t admin@10.112.4.121 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
-                # sleep a bit so the keyspace creation goes trough (in case we need one)
-                sleep 5
-                ssh -t admin@10.112.4.122 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
+        # Clean the app nodes.
+        # Because npm requires all sorts of things we source the .profile
+        # so the PATH variable gets set.
+        ssh -t admin@10.112.4.121 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
+        # sleep a bit so the keyspace creation goes trough (in case we need one)
+        sleep 5
+        ssh -t admin@10.112.4.122 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
 
-                # Sleep a bit so nginx can catch up
-                sleep 10
-                # Do a fake request to nginx to poke the balancers
-                curl http://${LOAD_HOST}
+        # Sleep a bit so nginx can catch up
+        sleep 10
+        # Do a fake request to nginx to poke the balancers
+        curl http://${LOAD_HOST}
 fi
 
 
