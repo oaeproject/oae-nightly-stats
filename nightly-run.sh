@@ -5,7 +5,8 @@
 # Configuration
 
 # Whether or not the app and db servers should be reset?
-START_CLEAN=true
+START_CLEAN_APP=true
+START_CLEAN_DB=true
 
 LOG_DIR=/var/www/`date +"%Y/%m/%d"`
 
@@ -22,14 +23,16 @@ CIRCONUS_AUTH_TOKEN="46c8c856-5912-4da2-c2b7-a9612d3ba949"
 CIRCONUS_APP_NAME="oae-nightly-run"
 
 # Increase the number of open files we can have.
-prctl -t basic -n process.max-file-descriptor -v 32678
+prctl -t basic -n process.max-file-descriptor -v 32678 $$
 
 # Log everything
 mkdir -p ${LOG_DIR}
 exec &> "${LOG_DIR}/nightly.txt"
 
 
-if $START_CLEAN ; then
+if $START_CLEAN_DB ; then
+        echo 'Cleaning the DB servers...'
+
         # Clean up the performance environment.
         # This involves ssh'ing into each machine and running the respective
         # clean scripts.
@@ -46,6 +49,10 @@ if $START_CLEAN ; then
         ssh -t root@10.112.4.124 /root/puppet-hilary/clean-scripts/dbnode.sh
         ssh -t root@10.112.4.125 /root/puppet-hilary/clean-scripts/dbnode.sh
         ssh -t root@10.112.4.126 /root/puppet-hilary/clean-scripts/dbnode.sh
+fi
+
+if $START_CLEAN_APP ; then
+        echo 'Cleaning the APP servers...'
 
         # Clean the app nodes.
         # Because npm requires all sorts of things we source the .profile
@@ -116,7 +123,7 @@ echo "Load ended at: " `date`
 
 
 # Sleep a bit so that all files are closed.
-sleep 10
+sleep 30
 
 
 # Generate a tsung suite
@@ -151,4 +158,4 @@ echo "Tsung suite ended at " `date`
 
 # Generate some simple stats.
 cd ~/oae-nightly-stats
-node main.js -b ${LOAD_NR_OF_BATCHES} -u ${LOAD_NR_OF_USERS} -g ${LOAD_NR_OF_GROUPS} -c ${LOAD_NR_OF_CONTENT} --generation-duration ${GENERATION_DURATION} --dataload-requests 30000 --dataload-duration ${LOAD_DURATION} --tsung-report ${TSUNG_LOG_DIR}report.hmtl > ${LOG_DIR}/stats.html
+node main.js -b ${LOAD_NR_OF_BATCHES} -u ${LOAD_NR_OF_USERS} -g ${LOAD_NR_OF_GROUPS} -c ${LOAD_NR_OF_CONTENT} --generation-duration ${GENERATION_DURATION} --dataload-requests 30000 --dataload-duration ${LOAD_DURATION} --tsung-report ${TSUNG_LOG_DIR}/report.hmtl > ${LOG_DIR}/stats.html
