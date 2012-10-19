@@ -22,6 +22,7 @@ LOAD_PORT=2001
 CIRCONUS_AUTH_TOKEN="46c8c856-5912-4da2-c2b7-a9612d3ba949"
 CIRCONUS_APP_NAME="oae-nightly-run"
 
+APP_REMOTE='sakaiproject'
 APP_BRANCH='master'
 
 # Increase the number of open files we can have.
@@ -56,6 +57,12 @@ fi
 if $START_CLEAN_APP ; then
         echo 'Cleaning the APP servers...'
 
+        # Set the branch and user for this test
+        ssh -t admin@10.112.4.121 "sed -i '' \"s/\\\$app_git_user .*/\\\$app_git_user = '$APP_REMOTE'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
+        ssh -t admin@10.112.4.121 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
+        ssh -t admin@10.112.4.122 "sed -i '' \"s/\\\$app_git_user .*/\\\$app_git_user = '$APP_REMOTE'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
+        ssh -t admin@10.112.4.122 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
+
         # Clean the app nodes.
         # Because npm requires all sorts of things we source the .profile
         # so the PATH variable gets set.
@@ -63,10 +70,6 @@ if $START_CLEAN_APP ; then
         # sleep a bit so the keyspace creation goes trough (in case we need one)
         sleep 5
         ssh -t admin@10.112.4.122 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
-
-        # Set the branch for this test
-        ssh -t admin@10.112.4.121 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
-        ssh -t admin@10.112.4.122 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
 
         # Sleep a bit so nginx can catch up
         sleep 10
