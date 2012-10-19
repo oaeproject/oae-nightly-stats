@@ -22,6 +22,8 @@ LOAD_PORT=2001
 CIRCONUS_AUTH_TOKEN="46c8c856-5912-4da2-c2b7-a9612d3ba949"
 CIRCONUS_APP_NAME="oae-nightly-run"
 
+APP_BRANCH='master'
+
 # Increase the number of open files we can have.
 prctl -t basic -n process.max-file-descriptor -v 32678 $$
 
@@ -62,14 +64,15 @@ if $START_CLEAN_APP ; then
         sleep 5
         ssh -t admin@10.112.4.122 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
 
+        # Set the branch for this test
+        ssh -t admin@10.112.4.121 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
+        ssh -t admin@10.112.4.122 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
+
         # Sleep a bit so nginx can catch up
         sleep 10
         # Do a fake request to nginx to poke the balancers
         curl http://${LOAD_HOST}
 fi
-
-
-
 
 # Get an admin session to play with.
 ADMIN_COOKIE=$(curl -s --cookie-jar - -d"username=administrator" -d"password=administrator" http://${LOAD_HOST}/api/auth/login | grep connect.sid | cut -f 7)
