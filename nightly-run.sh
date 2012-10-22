@@ -9,6 +9,7 @@ START_CLEAN_APP=true
 START_CLEAN_DB=true
 
 LOG_DIR=/var/www/`date +"%Y/%m/%d"`
+TEST_LABEL=$1
 
 LOAD_NR_OF_BATCHES=4
 LOAD_NR_OF_CONCURRENT_BATCHES=1
@@ -154,6 +155,7 @@ tsung -f tsung.xml -l ${LOG_DIR}/tsung start > ${LOG_DIR}/tsung/run.txt 2>&1
 # grep it out so we can run the stats
 TSUNG_LOG_DIR=$(grep -o '/var/www[^"]*' $LOG_DIR/tsung/run.txt)
 cd $TSUNG_LOG_DIR
+touch "${TEST_LABEL}.label"
 /opt/local/lib/tsung/bin/tsung_stats.pl
 END=`date +%s`
 curl -H "X-Circonus-Auth-Token: ${CIRCONUS_AUTH_TOKEN}" -H "X-Circonus-App-Name: ${CIRCONUS_APP_NAME}" -d"annotations=[{\"title\": \"Performance test\", \"description\": \"The tsung tests hitting the various endpoints.\", \"category\": \"nightly\", \"start\": ${START}, \"stop\": ${END} }]"  https://circonus.com/api/json/annotation
