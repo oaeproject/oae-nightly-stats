@@ -4,4 +4,4 @@ cd /root/oae-nightly-stats
 git pull origin master
 
 # Start the run
-./nightly-run.sh
+./nightly-run.sh $1
