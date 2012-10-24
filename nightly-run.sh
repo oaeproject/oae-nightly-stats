@@ -8,14 +8,14 @@
 START_CLEAN_APP=true
 START_CLEAN_DB=true
 
-LOG_DIR=/var/www/`date +"%Y/%m/%d"`
+LOG_DIR=/var/www/`date +"%Y/%m/%d/%H/%M"`
 TEST_LABEL=$1
 
 LOAD_NR_OF_BATCHES=4
-LOAD_NR_OF_CONCURRENT_BATCHES=1
-LOAD_NR_OF_USERS=100
-LOAD_NR_OF_GROUPS=200
-LOAD_NR_OF_CONTENT=500
+LOAD_NR_OF_CONCURRENT_BATCHES=4
+LOAD_NR_OF_USERS=1000
+LOAD_NR_OF_GROUPS=2000
+LOAD_NR_OF_CONTENT=5000
 LOAD_TENANT='cam'
 LOAD_HOST='165.225.133.115'
 LOAD_PORT=2001
@@ -138,8 +138,8 @@ cd ~/node-oae-tsung
 git pull
 npm update
 mkdir -p ${LOG_DIR}/tsung
-echo "node main.js -a /root/nightly/answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung"
-node main.js -a /root/nightly/answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung >> ${LOG_DIR}/package.txt 2>&1
+echo "node main.js -a answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung"
+node main.js -a answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung >> ${LOG_DIR}/package.txt 2>&1
 
 
 sleep 5

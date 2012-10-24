@@ -7,18 +7,6 @@
             "durationUnit": "minute",
             "duration": 20,
             "arrivalUnit": "second",
-            "arrival": 3.3
-        },
-        {
-            "durationUnit": "minute",
-            "duration": 10,
-            "arrivalUnit": "hour",
-            "arrival": 0.1
-        },
-        {
-            "durationUnit": "minute",
-            "duration": 20,
-            "arrivalUnit": "second",
             "arrival": 4.8
         },
         {
@@ -32,6 +20,42 @@
             "duration": 20,
             "arrivalUnit": "second",
             "arrival": 6.6
+        },
+        {
+            "durationUnit": "minute",
+            "duration": 10,
+            "arrivalUnit": "hour",
+            "arrival": 0.1
+        },
+        {
+            "durationUnit": "minute",
+            "duration": 20,
+            "arrivalUnit": "second",
+            "arrival": 8.1
+        },
+        {
+            "durationUnit": "minute",
+            "duration": 10,
+            "arrivalUnit": "hour",
+            "arrival": 0.1
+        },
+        {
+            "durationUnit": "minute",
+            "duration": 20,
+            "arrivalUnit": "second",
+            "arrival": 9.6
+        },
+        {
+            "durationUnit": "minute",
+            "duration": 10,
+            "arrivalUnit": "hour",
+            "arrival": 0.1
+        },
+        {
+            "durationUnit": "minute",
+            "duration": 20,
+            "arrivalUnit": "second",
+            "arrival": 11.1
         }
     ]
 }
