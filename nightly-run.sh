@@ -138,8 +138,8 @@ cd ~/node-oae-tsung
 git pull
 npm update
 mkdir -p ${LOG_DIR}/tsung
-echo "node main.js -a answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung"
-node main.js -a answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung >> ${LOG_DIR}/package.txt 2>&1
+echo "node main.js -a /root/oae-nightly-stats/answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung"
+node main.js -a /root/oae-nightly-stats/answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung >> ${LOG_DIR}/package.txt 2>&1
 
 
 sleep 5
