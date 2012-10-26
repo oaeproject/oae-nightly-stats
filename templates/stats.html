@@ -201,7 +201,17 @@ If you shoot us an e-mail we'll add you.</p>
         <td>{{ tsung.meanRequestTime }}</td>
     </tr>
 </table>
-<p>More details are available in the <a href="{{ tsung.report }}">report</a>.</p>
+<p>More details are available in the <a href="{{ tsung.reportUrl }}">report</a>.</p>
+
+<h2>Flame graphs</h2>
+<p>During each tsung there are three points in time where we profile an app server for a minute and see what it is spending its time in. This profile data gets turned into a flamegraph to have an immediate visual feedback of what's exactly going on. We try to time it that the profiling happens during peak loads. (Because of Tsung's randomness, this isn't always completely accurate.)<br />
+
+  For more info, checkout <a href="http://blog.nodejs.org/2012/04/25/profiling-node-js/" target="_blank">this blogpost.</a></p>
+<ul>
+  <li><a href="graphs/0-graph.svg">First tsung phase</a></li>
+  <li><a href="graphs/1-graph.svg">Second tsung phase</a></li>
+  <li><a href="graphs/2-graph.svg">Third tsung phase</a></li>
+</ul>
 
 </body>
 </html>

@@ -139,13 +139,11 @@ cd ~/node-oae-tsung
 git pull
 npm update
 mkdir -p ${LOG_DIR}/tsung
-echo "node main.js -a /root/oae-nightly-stats/answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung"
 node main.js -a /root/oae-nightly-stats/answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung >> ${LOG_DIR}/package.txt 2>&1
 
 
-sleep 5
-
-
+# Capture some graphs.
+ssh -n -f admin@10.112.4.121 ". ~/.profile && nohup sh -c /home/admin/flamegraphs.sh > /dev/null 2>&1 &"
 
 # Run the tsung tests.
 START=`date +%s`
@@ -163,7 +161,8 @@ curl -H "X-Circonus-Auth-Token: ${CIRCONUS_AUTH_TOKEN}" -H "X-Circonus-App-Name:
 echo "Tsung suite ended at " `date`
 
 
-
+# Copy over the graphs.
+scp -r admin@10.112.4.121:/home/admin/graphs ${LOG_DIR}
 
 # Generate some simple stats.
 cd ~/oae-nightly-stats
