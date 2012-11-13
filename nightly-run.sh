@@ -78,6 +78,10 @@ if $START_CLEAN_APP ; then
         curl http://${LOAD_HOST}
 fi
 
+# Flush redis.
+ssh -t admin@10.112.2.103 "echo flushdb | redis-cli"
+
+
 # Get an admin session to play with.
 ADMIN_COOKIE=$(curl -s --cookie-jar - -d"username=administrator" -d"password=administrator" http://${LOAD_HOST}/api/auth/login | grep connect.sid | cut -f 7)
 
