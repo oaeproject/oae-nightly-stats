@@ -11,15 +11,19 @@ START_CLEAN_DB=true
 LOG_DIR=/var/www/`date +"%Y/%m/%d/%H/%M"`
 TEST_LABEL=$1
 
-LOAD_NR_OF_BATCHES=4
-LOAD_NR_OF_CONCURRENT_BATCHES=4
+LOAD_NR_OF_BATCHES=10
+LOAD_NR_OF_CONCURRENT_BATCHES=5
 LOAD_NR_OF_USERS=1000
 LOAD_NR_OF_GROUPS=2000
 LOAD_NR_OF_CONTENT=5000
-LOAD_TENANT='cam'
-LOAD_HOST='165.225.133.115'
-LOAD_PORT=2001
 
+# Admin host
+ADMIN_HOST='admin.oae-performance.sakaiproject.org'
+# Tenant host
+TENANT_HOST='cam.oae-performance.sakaiproject.org'
+TENANT_ALIAS='cam'
+
+# Circonus configuration
 CIRCONUS_AUTH_TOKEN="46c8c856-5912-4da2-c2b7-a9612d3ba949"
 CIRCONUS_APP_NAME="oae-nightly-run"
 
@@ -75,7 +79,8 @@ if $START_CLEAN_APP ; then
         # Sleep a bit so nginx can catch up
         sleep 10
         # Do a fake request to nginx to poke the balancers
-        curl http://${LOAD_HOST}
+        curl http://${ADMIN_HOST}
+        curl http://${TENANT_HOST}
 fi
 
 # Flush redis.
@@ -83,14 +88,14 @@ ssh -t admin@10.112.2.103 "echo flushdb | redis-cli"
 
 
 # Get an admin session to play with.
-ADMIN_COOKIE=$(curl -s --cookie-jar - -d"username=administrator" -d"password=administrator" http://${LOAD_HOST}/api/auth/login | grep connect.sid | cut -f 7)
+ADMIN_COOKIE=$(curl -s --cookie-jar - -d"username=administrator" -d"password=administrator" http://${ADMIN_HOST}/api/auth/login | grep connect.sid | cut -f 7)
 
 # Create a tenant.
 # In case we start from a snapshot, this will fail.
-curl --cookie connect.sid=${ADMIN_COOKIE} -d"id=cam" -d"name=Cambridge" -d"port=2001" -d"baseurl=t1.oae-performance.sakaiproject.org" http://${LOAD_HOST}/api/tenant/create
+curl --cookie connect.sid=${ADMIN_COOKIE} -d"alias=${TENANT_ALIAS}" -d"name=Cambridge" -d"host=${TENANT_HOST}" http://${ADMIN_HOST}/api/tenant/create
 
 # Turn reCaptcha checking off.
-curl --cookie connect.sid=${ADMIN_COOKIE} -d"oae-principals/recaptcha/enabled=false" http://${LOAD_HOST}/api/config
+curl --cookie connect.sid=${ADMIN_COOKIE} -d"oae-principals/recaptcha/enabled=false" http://${ADMIN_HOST}/api/config
 
 
 
@@ -112,7 +117,7 @@ npm update
 # Generate data.
 START=`date +%s`
 echo "Data generation started at: " `date`
-node generate.js -b ${LOAD_NR_OF_BATCHES} -t ${LOAD_TENANT} -u ${LOAD_NR_OF_USERS} -g ${LOAD_NR_OF_GROUPS} -c ${LOAD_NR_OF_CONTENT} >> ${LOG_DIR}/generate.txt 2>&1
+node generate.js -b ${LOAD_NR_OF_BATCHES} -t ${TENANT_ALIAS} -u ${LOAD_NR_OF_USERS} -g ${LOAD_NR_OF_GROUPS} -c ${LOAD_NR_OF_CONTENT} >> ${LOG_DIR}/generate.txt 2>&1
 tar cvzf scripts.tar.gz scripts
 mv scripts.tar.gz ${LOG_DIR}
 END=`date +%s`
@@ -126,7 +131,7 @@ echo "Data generation ended at: " `date`
 # Load it up
 START=`date +%s`
 echo "Load started at: " `date`
-node loaddata.js -s 0 -b ${LOAD_NR_OF_BATCHES} -c ${LOAD_NR_OF_CONCURRENT_BATCHES} -h http://t1.oae-performance.sakaiproject.org > ${LOG_DIR}/loaddata.txt 2>&1
+node loaddata.js -s 0 -b ${LOAD_NR_OF_BATCHES} -c ${LOAD_NR_OF_CONCURRENT_BATCHES} -h http://${TENANT_HOST} > ${LOG_DIR}/loaddata.txt 2>&1
 END=`date +%s`
 LOAD_DURATION=$(($END - $START));
 LOAD_REQUESTS=$(grep 'Requests made:' ${LOG_DIR}/loaddata.txt | tail -n 1 | cut -f 3 -d " ");
