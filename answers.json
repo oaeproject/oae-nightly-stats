@@ -7,7 +7,7 @@
             "durationUnit": "minute",
             "duration": 20,
             "arrivalUnit": "second",
-            "arrival": 9.1
+            "arrival": 12
         },
         {
             "durationUnit": "minute",
@@ -19,7 +19,7 @@
             "durationUnit": "minute",
             "duration": 20,
             "arrivalUnit": "second",
-            "arrival": 10.6
+            "arrival": 15
         },
         {
             "durationUnit": "minute",
@@ -29,9 +29,9 @@
         },
         {
             "durationUnit": "minute",
-            "duration": 20,
+            "duration": 30,
             "arrivalUnit": "second",
-            "arrival": 12.1
+            "arrival": 20
         },
         {
             "durationUnit": "minute",
@@ -41,9 +41,9 @@
         },
         {
             "durationUnit": "minute",
-            "duration": 20,
+            "duration": 40,
             "arrivalUnit": "second",
-            "arrival": 13.6
+            "arrival": 30
         }
     ]
 }
