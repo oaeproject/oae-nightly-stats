@@ -48,17 +48,6 @@ exec &> "${LOG_DIR}/nightly.txt"
 if $START_CLEAN_DB ; then
         echo 'Cleaning the DB servers...'
 
-        # Clean up the performance environment.
-        # This involves ssh'ing into each machine and running the respective
-        # clean scripts.
-
-        # Clean the db nodes first.
-        # Stop the entire cassandra cluster
-        # Run this first so we don't run the risk that the 2 other nodes start distributing data of the first node
-        ssh -t root@10.112.4.124 /sbin/service cassandra stop
-        ssh -t root@10.112.4.125 /sbin/service cassandra stop
-        ssh -t root@10.112.4.126 /sbin/service cassandra stop
-
         # Wipe data of each cassandra node
         # A snapshot will restore about 40 batches worth of data.
         ssh -t root@10.112.4.124 /root/puppet-hilary/clean-scripts/dbclean.sh
