@@ -8,10 +8,23 @@ function switchGit {
         # $2 : Git Remote
         # $3 : Git Branch
 
+        # first reset the working copy so we can pull the newest code
+        ssh -t admin@$1 "cd puppet-hilary; git reset --hard HEAD; bin/pull.sh"
+
+        # switch the branch to the desired one
         ssh -t admin@$1 "sed -i '' \"s/\\\$app_git_user .*/\\\$app_git_user = '$2'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
         ssh -t admin@$1 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$3'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
 }
 
+function shutdownDb {
+        # $1 : Host IP
+
+}
+
+function cleanDb {
+        # $1 : Host IP
+        ssh -t root@$1 /root/puppet-hilary/clean-scripts/dbclean.sh
+}
 
 # Configuration
 
@@ -49,10 +62,11 @@ if $START_CLEAN_DB ; then
         echo 'Cleaning the DB servers...'
 
         # Wipe data of each cassandra node
-        # A snapshot will restore about 40 batches worth of data.
-        ssh -t root@10.112.4.124 /root/puppet-hilary/clean-scripts/dbclean.sh
-        ssh -t root@10.112.4.125 /root/puppet-hilary/clean-scripts/dbclean.sh
-        ssh -t root@10.112.4.126 /root/puppet-hilary/clean-scripts/dbclean.sh
+        cleanDb 10.112.4.124
+        cleanDb 10.112.4.125
+        cleanDb 10.112.4.126
+        cleanDb 10.112.3.39
+        cleanDb 10.112.3.40
 fi
 
 ssh -t admin@10.112.2.103 "redis-cli flushall"
@@ -91,6 +105,7 @@ if $START_CLEAN_APP ; then
         # Do a fake request to nginx to poke the balancers
         curl http://${LOAD_HOST}
 fi
+
 
 # Get an admin session to play with.
 ADMIN_COOKIE=$(curl -s --cookie-jar - -d"username=administrator" -d"password=administrator" http://${LOAD_HOST}/api/auth/login | grep connect.sid | cut -f 7)
