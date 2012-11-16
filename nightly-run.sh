@@ -152,8 +152,8 @@ cd ~/node-oae-tsung
 git pull
 npm update
 mkdir -p ${LOG_DIR}/tsung
-echo "node main.js -a /root/nightly/answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung"
-node main.js -a /root/nightly/answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung >> ${LOG_DIR}/package.txt 2>&1
+echo "node main.js -a /root/oae-nightly-stats/answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung"
+node main.js -a /root/oae-nightly-stats/answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung >> ${LOG_DIR}/package.txt 2>&1
 
 
 sleep 5
@@ -181,3 +181,5 @@ echo "Tsung suite ended at " `date`
 # Generate some simple stats.
 cd ~/oae-nightly-stats
 node main.js -b ${LOAD_NR_OF_BATCHES} -u ${LOAD_NR_OF_USERS} -g ${LOAD_NR_OF_GROUPS} -c ${LOAD_NR_OF_CONTENT} --generation-duration ${GENERATION_DURATION} --dataload-requests 30000 --dataload-duration ${LOAD_DURATION} --tsung-report ${TSUNG_LOG_DIR}/report.hmtl > ${LOG_DIR}/stats.html
+
+
