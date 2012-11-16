@@ -19,7 +19,7 @@ function switchGit {
 START_CLEAN_APP=true
 START_CLEAN_DB=true
 
-LOG_DIR=/var/www/`date +"%Y/%m/%d"`
+LOG_DIR=/var/www/`date +"%Y/%m/%d/%H/%M"`
 TEST_LABEL=$1
 
 LOAD_NR_OF_BATCHES=10
@@ -139,6 +139,7 @@ echo "Load started at: " `date`
 node loaddata.js -s 0 -b ${LOAD_NR_OF_BATCHES} -c ${LOAD_NR_OF_CONCURRENT_BATCHES} -h http://t1.oae-performance.sakaiproject.org > ${LOG_DIR}/loaddata.txt 2>&1
 END=`date +%s`
 LOAD_DURATION=$(($END - $START));
+LOAD_REQUESTS=$(grep 'Requests made:' ${LOG_DIR}/loaddata.txt | tail -n 1 | cut -f 3 -d " ");
 curl -H "X-Circonus-Auth-Token: ${CIRCONUS_AUTH_TOKEN}" -H "X-Circonus-App-Name: ${CIRCONUS_APP_NAME}" -d"annotations=[{\"title\": \"Data load\", \"description\": \"Loading the generated data into the system.\", \"category\": \"nightly\", \"start\": ${START}, \"stop\": ${END} }]"  https://circonus.com/api/json/annotation
 echo "Load ended at: " `date`
 
@@ -156,9 +157,8 @@ echo "node main.js -a /root/oae-nightly-stats/answers.json -s /root/OAE-model-lo
 node main.js -a /root/oae-nightly-stats/answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung >> ${LOG_DIR}/package.txt 2>&1
 
 
-sleep 5
-
-
+# Capture some graphs.
+ssh -n -f admin@10.112.4.121 ". ~/.profile && nohup sh -c /home/admin/flamegraphs.sh > /dev/null 2>&1 &"
 
 # Run the tsung tests.
 START=`date +%s`
@@ -176,10 +176,11 @@ curl -H "X-Circonus-Auth-Token: ${CIRCONUS_AUTH_TOKEN}" -H "X-Circonus-App-Name:
 echo "Tsung suite ended at " `date`
 
 
-
+# Copy over the graphs.
+scp -r admin@10.112.4.121:/home/admin/graphs ${LOG_DIR}
 
 # Generate some simple stats.
 cd ~/oae-nightly-stats
-node main.js -b ${LOAD_NR_OF_BATCHES} -u ${LOAD_NR_OF_USERS} -g ${LOAD_NR_OF_GROUPS} -c ${LOAD_NR_OF_CONTENT} --generation-duration ${GENERATION_DURATION} --dataload-requests 30000 --dataload-duration ${LOAD_DURATION} --tsung-report ${TSUNG_LOG_DIR}/report.hmtl > ${LOG_DIR}/stats.html
+node main.js -b ${LOAD_NR_OF_BATCHES} -u ${LOAD_NR_OF_USERS} -g ${LOAD_NR_OF_GROUPS} -c ${LOAD_NR_OF_CONTENT} --generation-duration ${GENERATION_DURATION} --dataload-requests ${LOAD_REQUESTS} --dataload-duration ${LOAD_DURATION} --tsung-report ${TSUNG_LOG_DIR}/report.html > ${LOG_DIR}/stats.html
 
 

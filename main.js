@@ -138,6 +138,7 @@ client.hget('telemetry', 'cassandra.write', function(err, data) {
 // Parse the tsung stats.
 stats.tsung = {};
 stats.tsung.report = argv['tsung-report'];
+stats.tsung.reportUrl = argv['tsung-report'].substr(8);
 var tsungHTML = fs.readFileSync(stats.tsung.report, 'UTF-8');
 var $ = cheerio.load(tsungHTML);
 
