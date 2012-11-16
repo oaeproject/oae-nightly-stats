@@ -61,9 +61,9 @@ if $START_CLEAN_DB ; then
 
         # Wipe data of each cassandra node
         # A snapshot will restore about 40 batches worth of data.
-        ssh -t root@10.112.4.124 /root/puppet-hilary/clean-scripts/dbnode.sh
-        ssh -t root@10.112.4.125 /root/puppet-hilary/clean-scripts/dbnode.sh
-        ssh -t root@10.112.4.126 /root/puppet-hilary/clean-scripts/dbnode.sh
+        ssh -t root@10.112.4.124 /root/puppet-hilary/clean-scripts/dbclean.sh
+        ssh -t root@10.112.4.125 /root/puppet-hilary/clean-scripts/dbclean.sh
+        ssh -t root@10.112.4.126 /root/puppet-hilary/clean-scripts/dbclean.sh
 fi
 
 if $START_CLEAN_APP ; then
@@ -96,7 +96,7 @@ if $START_CLEAN_APP ; then
 
         # Sleep a bit so nginx can catch up
         sleep 10
-        
+
         # Do a fake request to nginx to poke the balancers
         curl http://${LOAD_HOST}
 fi
