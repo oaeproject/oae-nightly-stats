@@ -55,6 +55,8 @@ if $START_CLEAN_DB ; then
         ssh -t root@10.112.4.126 /root/puppet-hilary/clean-scripts/dbclean.sh
 fi
 
+ssh -t admin@10.112.2.103 "redis-cli flushall"
+
 if $START_CLEAN_APP ; then
         echo 'Cleaning the APP servers...'
 
