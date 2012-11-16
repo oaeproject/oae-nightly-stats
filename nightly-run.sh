@@ -16,11 +16,6 @@ function switchGit {
         ssh -t admin@$1 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$3'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
 }
 
-function shutdownDb {
-        # $1 : Host IP
-
-}
-
 function cleanDb {
         # $1 : Host IP
         ssh -t root@$1 /root/puppet-hilary/clean-scripts/dbclean.sh
