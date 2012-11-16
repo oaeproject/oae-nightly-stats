@@ -2,6 +2,17 @@
 # This bash script holds the commands to start
 # a new dataload and run the standard tsung suite.
 
+# Functions
+function switchGit {
+        # $1 : Host IP
+        # $2 : Git Remote
+        # $3 : Git Branch
+
+        ssh -t admin@$1 "sed -i '' \"s/\\\$app_git_user .*/\\\$app_git_user = '$2'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
+        ssh -t admin@$1 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$3'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
+}
+
+
 # Configuration
 
 # Whether or not the app and db servers should be reset?
@@ -11,11 +22,11 @@ START_CLEAN_DB=true
 LOG_DIR=/var/www/`date +"%Y/%m/%d"`
 TEST_LABEL=$1
 
-LOAD_NR_OF_BATCHES=4
-LOAD_NR_OF_CONCURRENT_BATCHES=1
-LOAD_NR_OF_USERS=100
-LOAD_NR_OF_GROUPS=200
-LOAD_NR_OF_CONTENT=500
+LOAD_NR_OF_BATCHES=10
+LOAD_NR_OF_CONCURRENT_BATCHES=10
+LOAD_NR_OF_USERS=1000
+LOAD_NR_OF_GROUPS=2000
+LOAD_NR_OF_CONTENT=5000
 LOAD_TENANT='cam'
 LOAD_HOST='165.225.133.115'
 LOAD_PORT=2001
@@ -23,8 +34,8 @@ LOAD_PORT=2001
 CIRCONUS_AUTH_TOKEN="46c8c856-5912-4da2-c2b7-a9612d3ba949"
 CIRCONUS_APP_NAME="oae-nightly-run"
 
-APP_REMOTE='sakaiproject'
-APP_BRANCH='master'
+APP_REMOTE='simong'
+APP_BRANCH='usercacheperformanceMembershipsCassandra'
 
 # Increase the number of open files we can have.
 prctl -t basic -n process.max-file-descriptor -v 32678 $$
@@ -58,22 +69,34 @@ fi
 if $START_CLEAN_APP ; then
         echo 'Cleaning the APP servers...'
 
-        # Set the branch and user for this test
-        ssh -t admin@10.112.4.121 "sed -i '' \"s/\\\$app_git_user .*/\\\$app_git_user = '$APP_REMOTE'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
-        ssh -t admin@10.112.4.121 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
-        ssh -t admin@10.112.4.122 "sed -i '' \"s/\\\$app_git_user .*/\\\$app_git_user = '$APP_REMOTE'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
-        ssh -t admin@10.112.4.122 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
+        switchGit 10.112.4.121 $APP_REMOTE $APP_BRANCH
+        switchGit 10.112.4.122 $APP_REMOTE $APP_BRANCH
+        switchGit 10.112.5.18 $APP_REMOTE $APP_BRANCH
+        switchGit 10.112.4.244 $APP_REMOTE $APP_BRANCH
+        switchGit 10.112.2.196 $APP_REMOTE $APP_BRANCH
+        switchGit 10.112.4.33 $APP_REMOTE $APP_BRANCH
+        switchGit 10.112.4.230 $APP_REMOTE $APP_BRANCH
+        switchGit 10.112.5.178 $APP_REMOTE $APP_BRANCH
 
         # Clean the app nodes.
         # Because npm requires all sorts of things we source the .profile
         # so the PATH variable gets set.
         ssh -t admin@10.112.4.121 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
+
         # sleep a bit so the keyspace creation goes trough (in case we need one)
         sleep 5
+
         ssh -t admin@10.112.4.122 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
+        ssh -t admin@10.112.5.18 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
+        ssh -t admin@10.112.4.244 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
+        ssh -t admin@10.112.2.196 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
+        ssh -t admin@10.112.4.33 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
+        ssh -t admin@10.112.4.230 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
+        ssh -t admin@10.112.5.178 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
 
         # Sleep a bit so nginx can catch up
         sleep 10
+        
         # Do a fake request to nginx to poke the balancers
         curl http://${LOAD_HOST}
 fi
