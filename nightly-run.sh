@@ -15,9 +15,6 @@ function switchGit {
         ssh -t admin@$1 "sed -i '' \"s/\\\$app_git_user .*/\\\$app_git_user = '$2'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
         ssh -t admin@$1 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$3'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
 
-        # Now, set the open file limit
-        ssh -t admin@$1 "sudo prctl -r -t basic -n process.max-file-descriptor -v 32768 -i process `pgrep node`"
-        
 }
 
 function cleanDb {
