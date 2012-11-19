@@ -11,8 +11,8 @@ START_CLEAN_DB=true
 LOG_DIR=/var/www/`date +"%Y/%m/%d/%H/%M"`
 TEST_LABEL=$1
 
-LOAD_NR_OF_BATCHES=4
-LOAD_NR_OF_CONCURRENT_BATCHES=4
+LOAD_NR_OF_BATCHES=10
+LOAD_NR_OF_CONCURRENT_BATCHES=5
 LOAD_NR_OF_USERS=1000
 LOAD_NR_OF_GROUPS=2000
 LOAD_NR_OF_CONTENT=5000
@@ -20,8 +20,13 @@ LOAD_TENANT='cam'
 LOAD_HOST='165.225.133.115'
 LOAD_PORT=2001
 
+TSUNG_MAX_USERS=10000
+
 CIRCONUS_AUTH_TOKEN="46c8c856-5912-4da2-c2b7-a9612d3ba949"
 CIRCONUS_APP_NAME="oae-nightly-run"
+
+PUPPET_REMOTE='sakaiproject'
+PUPPET_BRANCH='master'
 
 APP_REMOTE='sakaiproject'
 APP_BRANCH='master'
@@ -33,54 +38,92 @@ prctl -t basic -n process.max-file-descriptor -v 32678 $$
 mkdir -p ${LOG_DIR}
 exec &> "${LOG_DIR}/nightly.txt"
 
+######################
+## HELPER FUNCTIONS ##
+######################
+
+## Refresh the puppet configuration of the server
+function refreshPuppet {
+        # $1 : Host IP
+        ssh -t admin@$1 "cd puppet-hilary; git reset --hard HEAD; git checkout $PUPPET_REMOTE $PUPPET_BRANCH ; bin/pull.sh"
+}
+
+## Delete and refresh the app server
+function refreshApp {
+        # $1 : Host IP
+        refreshPuppet $1
+
+        # first reset the puppet working copy so we can pull the newest code
+        ssh -t admin@$1 "cd puppet-hilary; git reset --hard HEAD; git checkout $PUPPET_REMOTE $PUPPET_BRANCH ; bin/pull.sh"
+
+        # switch the branch to the desired one in the init.pp script
+        ssh -t admin@$1 "sed -i '' \"s/\\\$app_git_user .*/\\\$app_git_user = '$APP_REMOTE'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
+        ssh -t admin@$1 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
+
+        # refresh the OAE application now
+        ssh -t admin@$1 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
+}
+
+## Shut down the DB node
+function shutdownDb {
+        # $1 : Host IP
+        refreshPuppet $1
+        ssh -t root@$1 /root/puppet-hilary/clean-scripts/dbshutdown.sh
+}
+
+## Refresh the DB node
+function refreshDb {
+        # $1 : Host IP
+        ssh -t root@$1 /root/puppet-hilary/clean-scripts/dbnode.sh
+}
+
+## Refresh the Redis node
+function refreshRedis {
+        refreshPuppet $1
+        ssh -t admin@$1 "echo flushdb | redis-cli"
+}
+
+# Clean up the performance environment.
+# This involves ssh'ing into each machine and running the respective
+# clean scripts.
 
 if $START_CLEAN_DB ; then
         echo 'Cleaning the DB servers...'
 
-        # Clean up the performance environment.
-        # This involves ssh'ing into each machine and running the respective
-        # clean scripts.
-
         # Clean the db nodes first.
         # Stop the entire cassandra cluster
-        # Run this first so we don't run the risk that the 2 other nodes start distributing data of the first node
-        ssh -t root@10.112.4.124 /sbin/service cassandra stop
-        ssh -t root@10.112.4.125 /sbin/service cassandra stop
-        ssh -t root@10.112.4.126 /sbin/service cassandra stop
 
-        # Wipe data of each cassandra node
-        # A snapshot will restore about 40 batches worth of data.
-        ssh -t root@10.112.4.124 /root/puppet-hilary/clean-scripts/dbnode.sh
-        ssh -t root@10.112.4.125 /root/puppet-hilary/clean-scripts/dbnode.sh
-        ssh -t root@10.112.4.126 /root/puppet-hilary/clean-scripts/dbnode.sh
+        # Run this first so we don't run the risk that the 2 other nodes start distributing data of the first node
+        shutdownDb 10.112.4.124
+        shutdownDb 10.112.4.125
+        shutdownDb 10.112.4.126
+
+        refreshDb 10.112.4.124
+        refreshDb 10.112.4.125
+        refreshDb 10.112.4.126
+
 fi
 
 if $START_CLEAN_APP ; then
         echo 'Cleaning the APP servers...'
 
-        # Set the branch and user for this test
-        ssh -t admin@10.112.4.121 "sed -i '' \"s/\\\$app_git_user .*/\\\$app_git_user = '$APP_REMOTE'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
-        ssh -t admin@10.112.4.121 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
-        ssh -t admin@10.112.4.122 "sed -i '' \"s/\\\$app_git_user .*/\\\$app_git_user = '$APP_REMOTE'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
-        ssh -t admin@10.112.4.122 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
-
-        # Clean the app nodes.
-        # Because npm requires all sorts of things we source the .profile
-        # so the PATH variable gets set.
-        ssh -t admin@10.112.4.121 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
-        # sleep a bit so the keyspace creation goes trough (in case we need one)
+        # Refresh the first app server and give time for the keyspace to get created
+        refreshApp 10.112.4.121
         sleep 5
-        ssh -t admin@10.112.4.122 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
+
+        refreshApp 10.112.4.122
+        refreshApp 10.112.5.18
+        refreshApp 10.112.4.244
 
         # Sleep a bit so nginx can catch up
         sleep 10
+
         # Do a fake request to nginx to poke the balancers
         curl http://${LOAD_HOST}
 fi
 
 # Flush redis.
-ssh -t admin@10.112.2.103 "echo flushdb | redis-cli"
-
+refreshRedis 10.112.2.103
 
 # Get an admin session to play with.
 ADMIN_COOKIE=$(curl -s --cookie-jar - -d"username=administrator" -d"password=administrator" http://${LOAD_HOST}/api/auth/login | grep connect.sid | cut -f 7)
@@ -94,18 +137,11 @@ curl --cookie connect.sid=${ADMIN_COOKIE} -d"oae-principals/recaptcha/enabled=fa
 
 
 
-
-
-
-
-
 # Model loader
 cd ~/OAE-model-loader
 rm -rf scripts/*
 git pull origin Hilary
 npm update
-
-
 
 
 
@@ -119,7 +155,6 @@ END=`date +%s`
 GENERATION_DURATION=$(($END - $START));
 curl -H "X-Circonus-Auth-Token: ${CIRCONUS_AUTH_TOKEN}" -H "X-Circonus-App-Name: ${CIRCONUS_APP_NAME}" -d"annotations=[{\"title\": \"Data generation\", \"description\": \"Generating fake users, groups, content\", \"category\": \"nightly\", \"start\": ${START}, \"stop\": ${END} }]"  https://circonus.com/api/json/annotation
 echo "Data generation ended at: " `date`
-
 
 
 
@@ -143,7 +178,7 @@ cd ~/node-oae-tsung
 git pull
 npm update
 mkdir -p ${LOG_DIR}/tsung
-node main.js -a /root/oae-nightly-stats/answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung >> ${LOG_DIR}/package.txt 2>&1
+node main.js -a /root/oae-nightly-stats/answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung -m ${TSUNG_MAX_USERS} >> ${LOG_DIR}/package.txt 2>&1
 
 
 # Capture some graphs.
@@ -171,3 +206,6 @@ scp -r admin@10.112.4.121:/home/admin/graphs ${LOG_DIR}
 # Generate some simple stats.
 cd ~/oae-nightly-stats
 node main.js -b ${LOAD_NR_OF_BATCHES} -u ${LOAD_NR_OF_USERS} -g ${LOAD_NR_OF_GROUPS} -c ${LOAD_NR_OF_CONTENT} --generation-duration ${GENERATION_DURATION} --dataload-requests ${LOAD_REQUESTS} --dataload-duration ${LOAD_DURATION} --tsung-report ${TSUNG_LOG_DIR}/report.html > ${LOG_DIR}/stats.html
+
+
+
