@@ -52,7 +52,7 @@ function refreshPuppet {
                 rm -Rf puppet-hilary;
                 git clone http://github.com/${PUPPET_REMOTE}/puppet-hilary;
                 cd puppet-hilary;
-                echo $2 > .node;
+                echo "$2" > .node;
                 git checkout ${PUPPET_BRANCH};
                 bin/pull.sh;
 EOF
@@ -69,8 +69,6 @@ function refreshApp {
         # switch the branch to the desired one in the init.pp script
         ssh -t admin@$1 << EOF
                 sudo chown -R admin ~/puppet-hilary
-                cd puppet-hilary;
-                echo $2 > .node
                 sed -i '' "s/\$app_git_user .*/\\$app_git_user = '$APP_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
                 sed -i '' "s/\\$app_git_branch .*/\\$app_git_branch = '$APP_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
 EOF
@@ -92,7 +90,6 @@ function shutdownDb {
 function refreshDb {
         # $1 : Host IP
 
-        ssh -t root@$1 "echo $2 > /root/puppet-hilary/.node"
         ssh -t root@$1 /root/puppet-hilary/clean-scripts/dbnode.sh
 }
 
