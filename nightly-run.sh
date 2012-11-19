@@ -45,7 +45,7 @@ exec &> "${LOG_DIR}/nightly.txt"
 ## Refresh the puppet configuration of the server
 function refreshPuppet {
         # $1 : Host IP
-        ssh -t admin@$1 "cd puppet-hilary; git reset --hard HEAD; git checkout $PUPPET_REMOTE $PUPPET_BRANCH ; bin/pull.sh"
+        ssh -t root@$1 "cd puppet-hilary; git reset --hard HEAD; git checkout $PUPPET_REMOTE $PUPPET_BRANCH ; bin/pull.sh"
 }
 
 ## Delete and refresh the app server
@@ -54,7 +54,7 @@ function refreshApp {
         refreshPuppet $1
 
         # first reset the puppet working copy so we can pull the newest code
-        ssh -t admin@$1 "cd puppet-hilary; git reset --hard HEAD; git checkout $PUPPET_REMOTE $PUPPET_BRANCH ; bin/pull.sh"
+        ssh -t admin@$1 "sudo chown -R admin puppet-hilary; cd puppet-hilary; git reset --hard HEAD; git checkout $PUPPET_REMOTE $PUPPET_BRANCH ; bin/pull.sh"
 
         # switch the branch to the desired one in the init.pp script
         ssh -t admin@$1 "sed -i '' \"s/\\\$app_git_user .*/\\\$app_git_user = '$APP_REMOTE'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
@@ -82,6 +82,11 @@ function refreshRedis {
         refreshPuppet $1
         ssh -t admin@$1 "echo flushdb | redis-cli"
 }
+
+
+###############
+## EXECUTION ##
+###############
 
 # Clean up the performance environment.
 # This involves ssh'ing into each machine and running the respective
