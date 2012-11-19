@@ -14,31 +14,7 @@
     "phases": [
         {
             "durationUnit": "minute",
-            "duration": 20,
-            "arrivalUnit": "second",
-            "arrival": 12
-        },
-        {
-            "durationUnit": "minute",
             "duration": 10,
-            "arrivalUnit": "second",
-            "arrival": 0.1
-        },
-        {
-            "durationUnit": "minute",
-            "duration": 20,
-            "arrivalUnit": "second",
-            "arrival": 15
-        },
-        {
-            "durationUnit": "minute",
-            "duration": 10,
-            "arrivalUnit": "second",
-            "arrival": 0.1
-        },
-        {
-            "durationUnit": "minute",
-            "duration": 30,
             "arrivalUnit": "second",
             "arrival": 20
         },
@@ -50,9 +26,15 @@
         },
         {
             "durationUnit": "minute",
-            "duration": 40,
+            "duration": 30,
             "arrivalUnit": "second",
-            "arrival": 30
+            "arrival": 24
+        },
+        {
+            "durationUnit": "minute",
+            "duration": 30,
+            "arrivalUnit": "second",
+            "arrival": 26
         }
     ]
 }
