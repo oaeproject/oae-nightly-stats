@@ -25,7 +25,6 @@ TSUNG_MAX_USERS=10000
 CIRCONUS_AUTH_TOKEN="46c8c856-5912-4da2-c2b7-a9612d3ba949"
 CIRCONUS_APP_NAME="oae-nightly-run"
 
-PUPPET_REMOTE='sakaiproject'
 PUPPET_BRANCH='master'
 
 APP_REMOTE='sakaiproject'
@@ -45,7 +44,7 @@ exec &> "${LOG_DIR}/nightly.txt"
 ## Refresh the puppet configuration of the server
 function refreshPuppet {
         # $1 : Host IP
-        ssh -t root@$1 "cd puppet-hilary; git reset --hard HEAD; git checkout $PUPPET_REMOTE $PUPPET_BRANCH ; bin/pull.sh"
+        ssh -t root@$1 "cd puppet-hilary; git reset --hard HEAD; git checkout $PUPPET_BRANCH ; bin/pull.sh"
 }
 
 ## Delete and refresh the app server
