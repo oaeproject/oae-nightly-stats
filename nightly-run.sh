@@ -71,8 +71,8 @@ function refreshApp {
         # switch the branch to the desired one in the init.pp script
         ssh -t admin@$1 << EOF
                 sudo chown -R admin ~/puppet-hilary
-                sed -i '' "s/\$app_git_user .*/\$app_git_user = '$APP_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
-                sed -i '' "s/\$app_git_branch .*/\$app_git_branch = '$APP_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
+                sed -i '' "s/\\\$app_git_user .*/\\\$app_git_user = '$APP_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
+                sed -i '' "s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
 EOF
 
         # refresh the OAE application now
