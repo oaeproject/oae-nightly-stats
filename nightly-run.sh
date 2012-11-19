@@ -45,13 +45,16 @@ mkdir -p ${LOG_DIR}
 ## Refresh the puppet configuration of the server
 function refreshPuppet {
         # $1 : Host IP
+
+        # Delete and re-clone puppet repository
         ssh -t root@$1 << EOF
                 rm -Rf puppet-hilary;
                 git clone http://github.com/${PUPPET_REMOTE}/puppet-hilary;
                 cd puppet-hilary;
-                git checkout ${PUPPET_BRANCH}
+                git checkout ${PUPPET_BRANCH};
                 bin/pull.sh;
-        EOF
+EOF
+
 }
 
 ## Delete and refresh the app server
@@ -59,12 +62,12 @@ function refreshApp {
         # $1 : Host IP
         refreshPuppet $1
 
-        # first reset the puppet working copy so we can pull the newest code
-        ssh -t admin@$1 "sudo chown -R admin puppet-hilary; cd puppet-hilary; git reset --hard HEAD; git checkout $PUPPET_REMOTE $PUPPET_BRANCH ; bin/pull.sh"
-
         # switch the branch to the desired one in the init.pp script
-        ssh -t admin@$1 "sed -i '' \"s/\\\$app_git_user .*/\\\$app_git_user = '$APP_REMOTE'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
-        ssh -t admin@$1 "sed -i '' \"s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g\" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp"
+        ssh -t admin@$1 << EOF
+                sudo chown -R admin ~/puppet-hilary
+                sed -i '' "s/\$app_git_user .*/\\$app_git_user = '$APP_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
+                sed -i '' "s/\\$app_git_branch .*/\\$app_git_branch = '$APP_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
+EOF
 
         # refresh the OAE application now
         ssh -t admin@$1 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
