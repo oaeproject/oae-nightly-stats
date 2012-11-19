@@ -45,12 +45,14 @@ mkdir -p ${LOG_DIR}
 ## Refresh the puppet configuration of the server
 function refreshPuppet {
         # $1 : Host IP
+        # $2 : Node certName (e.g., app0)
 
         # Delete and re-clone puppet repository
         ssh -t root@$1 << EOF
                 rm -Rf puppet-hilary;
                 git clone http://github.com/${PUPPET_REMOTE}/puppet-hilary;
                 cd puppet-hilary;
+                echo $2 > .node;
                 git checkout ${PUPPET_BRANCH};
                 bin/pull.sh;
 EOF
@@ -60,11 +62,15 @@ EOF
 ## Delete and refresh the app server
 function refreshApp {
         # $1 : Host IP
-        refreshPuppet $1
+        # $2 : Node certName (e.g., app0)
+
+        refreshPuppet $1 $2
 
         # switch the branch to the desired one in the init.pp script
         ssh -t admin@$1 << EOF
                 sudo chown -R admin ~/puppet-hilary
+                cd puppet-hilary;
+                echo $2 > .node
                 sed -i '' "s/\$app_git_user .*/\\$app_git_user = '$APP_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
                 sed -i '' "s/\\$app_git_branch .*/\\$app_git_branch = '$APP_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
 EOF
@@ -76,19 +82,26 @@ EOF
 ## Shut down the DB node
 function shutdownDb {
         # $1 : Host IP
-        refreshPuppet $1
+        # $2 : Node certName (e.g., app0)
+
+        refreshPuppet $1 $2
         ssh -t root@$1 /root/puppet-hilary/clean-scripts/dbshutdown.sh
 }
 
 ## Refresh the DB node
 function refreshDb {
         # $1 : Host IP
+
+        ssh -t root@$1 "echo $2 > /root/puppet-hilary/.node"
         ssh -t root@$1 /root/puppet-hilary/clean-scripts/dbnode.sh
 }
 
 ## Refresh the Redis node
 function refreshRedis {
-        refreshPuppet $1
+        # $1 : Host IP
+        # $2 : Cert Name (e.g., db0)
+
+        refreshPuppet $1 $2
         ssh -t admin@$1 "echo flushdb | redis-cli"
 }
 
@@ -108,9 +121,9 @@ if $START_CLEAN_DB ; then
         # Stop the entire cassandra cluster
 
         # Run this first so we don't run the risk that the 2 other nodes start distributing data of the first node
-        shutdownDb 10.112.4.124
-        shutdownDb 10.112.4.125
-        shutdownDb 10.112.4.126
+        shutdownDb 10.112.4.124 db0
+        shutdownDb 10.112.4.125 db1
+        shutdownDb 10.112.4.126 db2
 
         refreshDb 10.112.4.124
         refreshDb 10.112.4.125
@@ -122,12 +135,12 @@ if $START_CLEAN_APP ; then
         echo 'Cleaning the APP servers...'
 
         # Refresh the first app server and give time for the keyspace to get created
-        refreshApp 10.112.4.121
+        refreshApp 10.112.4.121 app0
         sleep 5
 
-        refreshApp 10.112.4.122
-        refreshApp 10.112.5.18
-        refreshApp 10.112.4.244
+        refreshApp 10.112.4.122 app1
+        refreshApp 10.112.5.18 app2
+        refreshApp 10.112.4.244 app3
 
         # Sleep a bit so nginx can catch up
         sleep 10
@@ -137,7 +150,7 @@ if $START_CLEAN_APP ; then
 fi
 
 # Flush redis.
-refreshRedis 10.112.2.103
+refreshRedis 10.112.2.103 cache0
 
 # Get an admin session to play with.
 ADMIN_COOKIE=$(curl -s --cookie-jar - -d"username=administrator" -d"password=administrator" http://${LOAD_HOST}/api/auth/login | grep connect.sid | cut -f 7)
