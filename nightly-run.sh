@@ -63,6 +63,7 @@ if $START_CLEAN_DB ; then
         cleanDb 10.112.4.126
         cleanDb 10.112.3.39
         cleanDb 10.112.3.40
+        cleanDb 10.112.5.189
 fi
 
 ssh -t admin@10.112.2.103 "redis-cli flushall"
