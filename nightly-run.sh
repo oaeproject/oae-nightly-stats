@@ -44,15 +44,16 @@ mkdir -p ${LOG_DIR}
 
 ## Refresh the puppet configuration of the server
 function refreshPuppet {
-        # $1 : Host IP
-        # $2 : Node certName (e.g., app0)
+        # $1 : User
+        # $2 : Host IP
+        # $3 : Node certName (e.g., app0)
 
         # Delete and re-clone puppet repository
-        ssh -t root@$1 << EOF
+        ssh -t $1@$2 << EOF
                 rm -Rf puppet-hilary;
                 git clone http://github.com/${PUPPET_REMOTE}/puppet-hilary;
                 cd puppet-hilary;
-                echo "$2" > .node;
+                echo "$3" > .node;
                 git checkout ${PUPPET_BRANCH};
                 bin/pull.sh;
 EOF
@@ -64,7 +65,7 @@ function refreshApp {
         # $1 : Host IP
         # $2 : Node certName (e.g., app0)
 
-        refreshPuppet $1 $2
+        refreshPuppet admin $1 $2
 
         # switch the branch to the desired one in the init.pp script
         ssh -t admin@$1 << EOF
@@ -82,7 +83,7 @@ function shutdownDb {
         # $1 : Host IP
         # $2 : Node certName (e.g., app0)
 
-        refreshPuppet $1 $2
+        refreshPuppet root $1 $2
         ssh -t root@$1 /root/puppet-hilary/clean-scripts/dbshutdown.sh
 }
 
@@ -98,7 +99,7 @@ function refreshRedis {
         # $1 : Host IP
         # $2 : Cert Name (e.g., db0)
 
-        refreshPuppet $1 $2
+        refreshPuppet admin $1 $2
         ssh -t admin@$1 "echo flushdb | redis-cli"
 }
 
