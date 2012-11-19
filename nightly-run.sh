@@ -92,7 +92,7 @@ function shutdownDb {
 function refreshDb {
         # $1 : Host IP
 
-        ssh -t root@$1 /root/puppet-hilary/clean-scripts/dbnode.sh
+        ssh -t root@$1 /root/puppet-hilary/clean-scripts/dbclean.sh
 }
 
 ## Refresh the Redis node
