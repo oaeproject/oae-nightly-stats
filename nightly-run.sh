@@ -7,6 +7,7 @@
 # Whether or not the app and db servers should be reset?
 START_CLEAN_APP=true
 START_CLEAN_DB=true
+START_CLEAN_WEB=true
 
 LOG_DIR=/var/www/`date +"%Y/%m/%d/%H/%M"`
 TEST_LABEL=$1
@@ -16,9 +17,11 @@ LOAD_NR_OF_CONCURRENT_BATCHES=5
 LOAD_NR_OF_USERS=1000
 LOAD_NR_OF_GROUPS=2000
 LOAD_NR_OF_CONTENT=5000
+
 LOAD_TENANT='cam'
-LOAD_HOST='165.225.133.115'
-LOAD_PORT=2001
+LOAD_HOST='t1.oae-performance.sakaiproject.org'
+
+GLOBAL_HOST='global.oae-performance.sakaiproject.org'
 
 TSUNG_MAX_USERS=10000
 
@@ -30,6 +33,9 @@ PUPPET_BRANCH='master'
 
 APP_REMOTE='sakaiproject'
 APP_BRANCH='master'
+
+UX_REMOTE='sakaiproject'
+UX_BRANCH='master'
 
 # Increase the number of open files we can have.
 prctl -t basic -n process.max-file-descriptor -v 32678 $$
@@ -77,6 +83,20 @@ EOF
 
         # refresh the OAE application now
         ssh -t admin@$1 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
+}
+
+function refreshWeb {
+        # $1 : Host IP
+        # $2 : Node Cert Name (e.g., web0)
+
+        refreshPuppet admin $1 $2
+
+        # switch the branch to the desired one in the init.pp script
+        ssh -t admin@$1 << EOF
+                sudo chown -R admin ~/puppet-hilary
+                sed -i '' "s/\\\$ux_git_user .*/\\\$ux_git_user = '$UX_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
+                sed -i '' "s/\\\$ux_git_branch .*/\\\$ux_git_branch = '$UX_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
+EOF
 }
 
 ## Shut down the DB node
@@ -143,23 +163,30 @@ if $START_CLEAN_APP ; then
 
         # Sleep a bit so nginx can catch up
         sleep 10
-
-        # Do a fake request to nginx to poke the balancers
-        curl http://${LOAD_HOST}
 fi
+
+if $START_CLEAN_WEB ; then
+        echo 'Cleaning the web server...'
+
+        rereshWeb 10.112.4.123 web0
+fi
+
+
+# Do a fake request to nginx to poke the balancers
+curl http://${GLOBAL_HOST}
 
 # Flush redis.
 refreshRedis 10.112.2.103 cache0
 
 # Get an admin session to play with.
-ADMIN_COOKIE=$(curl -s --cookie-jar - -d"username=administrator" -d"password=administrator" http://${LOAD_HOST}/api/auth/login | grep connect.sid | cut -f 7)
+ADMIN_COOKIE=$(curl -s --cookie-jar - -d"username=administrator" -d"password=administrator" http://${GLOBAL_HOST}/api/auth/login | grep connect.sid | cut -f 7)
 
 # Create a tenant.
 # In case we start from a snapshot, this will fail.
-curl --cookie connect.sid=${ADMIN_COOKIE} -d"id=cam" -d"name=Cambridge" -d"port=2001" -d"baseurl=t1.oae-performance.sakaiproject.org" http://${LOAD_HOST}/api/tenant/create
+curl --cookie connect.sid=${ADMIN_COOKIE} -d"alias=${LOAD_TENANT}" -d"name=Cambridge" -d"host=${LOAD_HOST}" http://${GLOBAL_HOST}/api/tenant/create
 
 # Turn reCaptcha checking off.
-curl --cookie connect.sid=${ADMIN_COOKIE} -d"oae-principals/recaptcha/enabled=false" http://${LOAD_HOST}/api/config
+curl --cookie connect.sid=${ADMIN_COOKIE} -d"oae-principals/recaptcha/enabled=false" http://${GLOBAL_HOST}/api/config
 
 
 
@@ -187,7 +214,7 @@ echo "Data generation ended at: " `date`
 # Load it up
 START=`date +%s`
 echo "Load started at: " `date`
-node loaddata.js -s 0 -b ${LOAD_NR_OF_BATCHES} -c ${LOAD_NR_OF_CONCURRENT_BATCHES} -h http://t1.oae-performance.sakaiproject.org > ${LOG_DIR}/loaddata.txt 2>&1
+node loaddata.js -s 0 -b ${LOAD_NR_OF_BATCHES} -c ${LOAD_NR_OF_CONCURRENT_BATCHES} -h http://${LOAD_HOST} > ${LOG_DIR}/loaddata.txt 2>&1
 END=`date +%s`
 LOAD_DURATION=$(($END - $START));
 LOAD_REQUESTS=$(grep 'Requests made:' ${LOG_DIR}/loaddata.txt | tail -n 1 | cut -f 3 -d " ");
