@@ -80,7 +80,6 @@ function refreshApp {
                 sed -i '' "s/\\\$app_git_user .*/\\\$app_git_user = '$APP_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
                 sed -i '' "s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
 EOF
-
         # refresh the OAE application now
         ssh -t admin@$1 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
 }
@@ -97,6 +96,7 @@ function refreshWeb {
                 sed -i '' "s/\\\$ux_git_user .*/\\\$ux_git_user = '$UX_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
                 sed -i '' "s/\\\$ux_git_branch .*/\\\$ux_git_branch = '$UX_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
 EOF
+        ssh -t admin@$1 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/webnode.sh" 
 }
 
 ## Shut down the DB node
@@ -168,7 +168,7 @@ fi
 if $START_CLEAN_WEB ; then
         echo 'Cleaning the web server...'
 
-        rereshWeb 10.112.4.123 web0
+        refreshWeb 10.112.4.123 web0
 fi
 
 
