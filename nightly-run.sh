@@ -42,7 +42,7 @@ prctl -t basic -n process.max-file-descriptor -v 32678 $$
 
 # Log everything
 mkdir -p ${LOG_DIR}
-# exec &> "${LOG_DIR}/nightly.txt"
+exec &> "${LOG_DIR}/nightly.txt"
 
 ######################
 ## HELPER FUNCTIONS ##
@@ -96,7 +96,7 @@ function refreshWeb {
                 sed -i '' "s/\\\$ux_git_user .*/\\\$ux_git_user = '$UX_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
                 sed -i '' "s/\\\$ux_git_branch .*/\\\$ux_git_branch = '$UX_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
 EOF
-        ssh -t admin@$1 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/webnode.sh" 
+        ssh -t admin@$1 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/webclean.sh" 
 }
 
 ## Shut down the DB node
