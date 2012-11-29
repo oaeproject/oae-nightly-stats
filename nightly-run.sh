@@ -130,6 +130,10 @@ function refreshSearch {
         # $2 : Cert Name (e.g., search0)
 
         refreshPuppet root $1 $2
+        ssh -t root@$1 << EOF
+                cd ~/puppet-hilary
+                bin/apply.sh
+EOF
 
         # destroy the oae search index
         curl -XDELETE http://$1:9200/oae
@@ -140,6 +144,11 @@ function refreshMq {
         # $2 : Cert Name (e.g., mq0)
 
         refreshPuppet root $1 $2
+        ssh -t root@$1 << EOF
+                cd ~/puppet-hilary
+                bin/apply.sh
+EOF
+
 }
 
 ###############
