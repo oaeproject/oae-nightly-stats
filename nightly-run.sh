@@ -8,6 +8,7 @@
 START_CLEAN_APP=true
 START_CLEAN_DB=true
 START_CLEAN_WEB=true
+START_CLEAN_SEARCH=true
 
 LOG_DIR=/var/www/`date +"%Y/%m/%d/%H/%M"`
 TEST_LABEL=$1
@@ -124,6 +125,22 @@ function refreshRedis {
         ssh -t admin@$1 "echo flushdb | redis-cli"
 }
 
+function refreshSearch {
+        # $1 : Host IP
+        # $2 : Cert Name (e.g., search0)
+
+        refreshPuppet root $1 $2
+
+        # destroy the oae search index
+        curl -XDELETE http://$1:9200/oae
+}
+
+function refreshMq {
+        # $1 : Host IP
+        # $2 : Cert Name (e.g., mq0)
+
+        refreshPuppet root $1 $2
+}
 
 ###############
 ## EXECUTION ##
@@ -132,6 +149,12 @@ function refreshRedis {
 # Clean up the performance environment.
 # This involves ssh'ing into each machine and running the respective
 # clean scripts.
+
+if $START_CLEAN_SEARCH ; then
+        echo 'Cleaning the search data...'
+
+        refreshSearch 10.112.4.222 search0
+fi
 
 if $START_CLEAN_DB ; then
         echo 'Cleaning the DB servers...'
@@ -171,6 +194,7 @@ if $START_CLEAN_WEB ; then
         refreshWeb 10.112.4.123 web0
 fi
 
+refreshMq 10.112.5.189 mq0
 
 # Do a fake request to nginx to poke the balancers
 curl http://${GLOBAL_HOST}
