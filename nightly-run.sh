@@ -35,8 +35,18 @@ PUPPET_BRANCH='master'
 APP_REMOTE='sakaiproject'
 APP_BRANCH='master'
 
-UX_REMOTE='sakaiproject'
-UX_BRANCH='master'
+UX_REMOTE='nicolaasmatthijs'
+UX_BRANCH='ui'
+
+# Backend options are: 'local' or 'amazons3'
+STORAGE_BACKEND='local'
+STORAGE_LOCAL_DIR='/opt/files'
+STORAGE_AMAZON_ACCESS_KEY='AKIAJTASR3UIC6GNWFRA'
+STORAGE_AMAZON_SECRET_KEY='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'
+STORAGE_AMAZON_REGION='us-east-1'
+STORAGE_AMAZON_BUCKET='oae-performance-files'
+
+
 
 # Increase the number of open files we can have.
 prctl -t basic -n process.max-file-descriptor -v 32678 $$
@@ -80,6 +90,7 @@ function refreshApp {
                 sudo chown -R admin ~/puppet-hilary
                 sed -i '' "s/\\\$app_git_user .*/\\\$app_git_user = '$APP_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
                 sed -i '' "s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
+                rm -rf /opt/files/*;
 EOF
         # refresh the OAE application now
         ssh -t admin@$1 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
@@ -221,6 +232,19 @@ curl --cookie connect.sid=${ADMIN_COOKIE} -d"alias=${LOAD_TENANT}" -d"name=Cambr
 # Turn reCaptcha checking off.
 curl --cookie connect.sid=${ADMIN_COOKIE} -d"oae-principals/recaptcha/enabled=false" http://${GLOBAL_HOST}/api/config
 
+# Configure the storage backend
+curl --cookie connect.sid=${ADMIN_COOKIE} -d"oae-content/default-content-copyright/defaultcopyright=nocopyright" \
+  -d"oae-content/contentpermissions/defaultaccess=public" \
+  -d"oae-content/documentpermissions/defaultaccess=public" \
+  -d"oae-content/linkpermissions/defaultaccess=public" \
+  -d"oae-content/collectionpermissions/defaultaccess=public" \
+  -d"oae-content/default-content-privacy/defaultprivacy=everyone" \
+  -d"oae-content/storage/backend=${STORAGE_BACKEND}" \
+  -d"oae-content/storage/local-dir=${STORAGE_LOCAL_DIR}" \
+  -d"oae-content/storage/amazons3-access-key=${STORAGE_AMAZON_ACCESS_KEY}" \
+  -d"oae-content/storage/amazons3-secret-key=${STORAGE_AMAZON_SECRET_KEY}" \
+  -d"oae-content/storage/amazons3-region=${STORAGE_AMAZON_REGION}" \
+  -d"oae-content/storage/amazons3-bucket=${STORAGE_AMAZON_BUCKET}" http://${GLOBAL_HOST}/api/config
 
 
 # Model loader
