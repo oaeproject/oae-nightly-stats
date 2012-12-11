@@ -29,11 +29,11 @@ TSUNG_MAX_USERS=10000
 CIRCONUS_AUTH_TOKEN="46c8c856-5912-4da2-c2b7-a9612d3ba949"
 CIRCONUS_APP_NAME="oae-nightly-run"
 
-PUPPET_REMOTE='mrvisser'
-PUPPET_BRANCH='search'
+PUPPET_REMOTE='sakaiproject'
+PUPPET_BRANCH='master'
 
-APP_REMOTE='mrvisser'
-APP_BRANCH='search'
+APP_REMOTE='sakaiproject'
+APP_BRANCH='master'
 
 UX_REMOTE='sakaiproject'
 UX_BRANCH='master'
