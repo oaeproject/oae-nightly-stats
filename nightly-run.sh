@@ -90,6 +90,8 @@ function refreshApp {
                 sudo chown -R admin ~/puppet-hilary
                 sed -i '' "s/\\\$app_git_user .*/\\\$app_git_user = '$APP_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
                 sed -i '' "s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
+                sed -i '' "s/\\\$ux_git_user .*/\\\$ux_git_user = '$UX_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
+                sed -i '' "s/\\\$ux_git_branch .*/\\\$ux_git_branch = '$UX_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
                 rm -rf ${STORAGE_LOCAL_DIR}/*;
 EOF
         # refresh the OAE application now
