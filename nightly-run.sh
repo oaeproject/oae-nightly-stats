@@ -36,7 +36,7 @@ APP_REMOTE='sakaiproject'
 APP_BRANCH='master'
 
 UX_REMOTE='nicolaasmatthijs'
-UX_BRANCH='ui'
+UX_BRANCH='uiIndex2'
 
 # Backend options are: 'local' or 'amazons3'
 STORAGE_BACKEND='local'
