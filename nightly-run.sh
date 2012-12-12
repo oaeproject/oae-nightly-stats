@@ -40,7 +40,7 @@ UX_BRANCH='ui'
 
 # Backend options are: 'local' or 'amazons3'
 STORAGE_BACKEND='local'
-STORAGE_LOCAL_DIR='/opt/files'
+STORAGE_LOCAL_DIR='/shared/files'
 STORAGE_AMAZON_ACCESS_KEY='AKIAJTASR3UIC6GNWFRA'
 STORAGE_AMAZON_SECRET_KEY='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'
 STORAGE_AMAZON_REGION='us-east-1'
@@ -90,7 +90,7 @@ function refreshApp {
                 sudo chown -R admin ~/puppet-hilary
                 sed -i '' "s/\\\$app_git_user .*/\\\$app_git_user = '$APP_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
                 sed -i '' "s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
-                rm -rf /opt/files/*;
+                rm -rf ${STORAGE_LOCAL_DIR}/*;
 EOF
         # refresh the OAE application now
         ssh -t admin@$1 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
