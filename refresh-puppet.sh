@@ -30,9 +30,6 @@ function refreshApp {
   # $2 : Node name (e.g., app0)
   
   ssh -t admin@$1 << EOF
-    svcadm disable node-sakai-oae;
-    sudo rm -Rf /opt/oae;
-    sudo rm -Rf /opt/3akai-ux;
     sudo rm -Rf puppet-hilary;
     git clone http://github.com/${PUPPET_REMOTE}/puppet-hilary;
     cd puppet-hilary;
@@ -45,9 +42,7 @@ function refreshApp {
     sed -i '' "s/\\\$ux_git_user .*/\\\$ux_git_user = '$UX_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
     sed -i '' "s/\\\$ux_git_branch .*/\\\$ux_git_branch = '$UX_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
     
-    bin/pull.sh;
-    sudo bin/apply.sh;
-    sudo prctl -r -t basic -n process.max-file-descriptor -v 32768 -i process `pgrep node`;
+    clean-scripts/appnode.sh
 EOF
 
 }
@@ -85,6 +80,8 @@ refreshApp 10.112.6.25 app6
 refreshApp 10.112.6.26 app7
 
 refreshWeb 10.112.4.123 web0
+
+sleep 5;
 
 # Do a fake request to nginx to poke the balancers
 curl http://${ADMIN_HOST}
