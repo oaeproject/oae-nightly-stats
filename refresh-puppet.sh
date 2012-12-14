@@ -41,9 +41,9 @@ function refreshApp {
     sed -i '' "s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
     sed -i '' "s/\\\$ux_git_user .*/\\\$ux_git_user = '$UX_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
     sed -i '' "s/\\\$ux_git_branch .*/\\\$ux_git_branch = '$UX_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
-    
-    clean-scripts/appnode.sh
 EOF
+
+    ssh -t admin@$1 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
 
 }
 
@@ -53,7 +53,6 @@ function refreshWeb {
 
   # switch the branch to the desired one in the init.pp script
   ssh -t admin@$1 << EOF
-    sudo rm -Rf /opt/3akai-ux;
     sudo rm -Rf puppet-hilary;
     git clone http://github.com/${PUPPET_REMOTE}/puppet-hilary;
     cd puppet-hilary;
@@ -64,9 +63,9 @@ function refreshWeb {
     sudo chown -R admin ~/puppet-hilary
     sed -i '' "s/\\\$ux_git_user .*/\\\$ux_git_user = '$UX_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
     sed -i '' "s/\\\$ux_git_branch .*/\\\$ux_git_branch = '$UX_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
-    bin/pull.sh
-    sudo bin/apply.sh
 EOF
+
+    ssh -t admin@$1 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/webclean.sh"
 
 }
 
