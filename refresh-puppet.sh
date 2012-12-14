@@ -6,7 +6,7 @@
 
 # Whether or not the app and db servers should be reset?
 
-ADMIN_HOST='global.oae-performance.sakaiproject.org
+ADMIN_HOST='global.oae-performance.sakaiproject.org'
 TENANT_HOST='cam.oae-performance.sakaiproject.org'
 
 PUPPET_REMOTE='sakaiproject'
@@ -31,9 +31,9 @@ function refreshApp {
   
   ssh -t admin@$1 << EOF
     svcadm disable node-sakai-oae;
-    rm -Rf /opt/oae;
-    rm -Rf /opt/3akai-ux;
-    rm -Rf puppet-hilary;
+    sudo rm -Rf /opt/oae;
+    sudo rm -Rf /opt/3akai-ux;
+    sudo rm -Rf puppet-hilary;
     git clone http://github.com/${PUPPET_REMOTE}/puppet-hilary;
     cd puppet-hilary;
     echo "$2" > .node
@@ -58,8 +58,8 @@ function refreshWeb {
 
   # switch the branch to the desired one in the init.pp script
   ssh -t admin@$1 << EOF
-    rm -Rf /opt/3akai-ux;
-    rm -Rf puppet-hilary;
+    sudo rm -Rf /opt/3akai-ux;
+    sudo rm -Rf puppet-hilary;
     git clone http://github.com/${PUPPET_REMOTE}/puppet-hilary;
     cd puppet-hilary;
     echo "$2" > .node
