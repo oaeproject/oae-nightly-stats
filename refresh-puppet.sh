@@ -12,8 +12,8 @@ TENANT_HOST='cam.oae-performance.sakaiproject.org'
 PUPPET_REMOTE='sakaiproject'
 PUPPET_BRANCH='monday-demo'
 
-APP_REMOTE='sakaiproject'
-APP_BRANCH='master'
+APP_REMOTE='simong'
+APP_BRANCH='profilepictures'
 
 UX_REMOTE='sakaiproject'
 UX_BRANCH='Hilary'
