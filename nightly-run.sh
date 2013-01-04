@@ -30,10 +30,10 @@ CIRCONUS_AUTH_TOKEN="46c8c856-5912-4da2-c2b7-a9612d3ba949"
 CIRCONUS_APP_NAME="oae-nightly-run"
 
 PUPPET_REMOTE='sakaiproject'
-PUPPET_BRANCH='monday-demo'
+PUPPET_BRANCH='master'
 
-APP_REMOTE='simong'
-APP_BRANCH='profilepictures'
+APP_REMOTE='sakaiproject'
+APP_BRANCH='master'
 
 UX_REMOTE='sakaiproject'
 UX_BRANCH='Hilary'
@@ -173,14 +173,14 @@ EOF
 if $START_CLEAN_SEARCH ; then
         echo 'Cleaning the search data...'
 
+        refreshSearch 10.112.4.222 search0
+        refreshSearch 10.112.6.159 search1
+
+        # Ensure there is a search server available with which to delete the oae index
+        sleep 10
+
         # destroy the oae search index
         curl -XDELETE http://10.112.4.222:9200/oae
-
-        refreshSearch 10.112.4.222 search0
-        refreshSearch 10.112.6.21 search1
-        refreshSearch 10.112.6.31 search2
-        refreshSearch 10.112.6.32 search3
-        refreshSearch 10.112.6.44 search4
 fi
 
 if $START_CLEAN_DB ; then
@@ -193,34 +193,23 @@ if $START_CLEAN_DB ; then
         shutdownDb 10.112.4.124 db0
         shutdownDb 10.112.4.125 db1
         shutdownDb 10.112.4.126 db2
-        shutdownDb 10.112.6.27 db3
-        shutdownDb 10.112.6.28 db4
-        shutdownDb 10.112.6.29 db5
 
         refreshDb 10.112.4.124
         refreshDb 10.112.4.125
         refreshDb 10.112.4.126
-        refreshDb 10.112.6.27
-        refreshDb 10.112.6.28
-        refreshDb 10.112.6.29
 
 fi
 
 if $START_CLEAN_APP ; then
         echo 'Cleaning the APP servers...'
 
-        # Refresh the first app server and give time for the keyspace to get created
+        # Refresh the first app server and give time for bootstrapping cassandra, search etc...
         refreshApp 10.112.4.121 app0
-        sleep 5
+        sleep 10
 
         refreshApp 10.112.4.122 app1
         refreshApp 10.112.5.18 app2
         refreshApp 10.112.4.244 app3
-        refreshApp 10.112.6.23 app4
-        refreshApp 10.112.6.24 app5
-        refreshApp 10.112.6.25 app6
-        refreshApp 10.112.6.26 app7
-
 
         # Sleep a bit so nginx can catch up
         sleep 10
@@ -265,7 +254,7 @@ curl --cookie connect.sid=${ADMIN_COOKIE} -d"oae-content/default-content-copyrig
   -d"oae-content/storage/amazons3-region=${STORAGE_AMAZON_REGION}" \
   -d"oae-content/storage/amazons3-bucket=${STORAGE_AMAZON_BUCKET}" http://${ADMIN_HOST}/api/config
 
-exit 1
+
 
 # Model loader
 cd ~/OAE-model-loader
