@@ -98,6 +98,13 @@ EOF
         ssh -t admin@$1 ". ~/.profile && /home/admin/puppet-hilary/clean-scripts/appnode.sh"
 }
 
+function refreshActivity {
+    # $1 : Host IP
+    # $2 : Node certName (e.g., activity0)
+
+    refreshApp $1 $2
+}
+
 function refreshWeb {
         # $1 : Host IP
         # $2 : Node Cert Name (e.g., web0)
@@ -210,6 +217,10 @@ if $START_CLEAN_APP ; then
         refreshApp 10.112.4.122 app1
         refreshApp 10.112.5.18 app2
         refreshApp 10.112.4.244 app3
+
+        refreshActivity 10.112.6.85 activity0
+        refreshActivity 10.112.5.198 activity1
+        refreshActivity 10.112.3.29 activity2
 
         # Sleep a bit so nginx can catch up
         sleep 10
