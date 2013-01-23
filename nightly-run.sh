@@ -200,10 +200,16 @@ if $START_CLEAN_DB ; then
         shutdownDb 10.112.4.124 db0
         shutdownDb 10.112.4.125 db1
         shutdownDb 10.112.4.126 db2
+        shutdownDb 10.112.7.55 db3
+        shutdownDb 10.112.3.238 db4
+        shutdownDb 10.112.1.251 db5
 
         refreshDb 10.112.4.124
         refreshDb 10.112.4.125
         refreshDb 10.112.4.126
+        refreshDb 10.112.7.55
+        refreshDb 10.112.3.238
+        refreshDb 10.112.1.251
 
 fi
 
@@ -221,6 +227,9 @@ if $START_CLEAN_APP ; then
         refreshActivity 10.112.6.85 activity0
         refreshActivity 10.112.5.198 activity1
         refreshActivity 10.112.3.29 activity2
+        refreshActivity 10.112.1.113 activity3
+        refreshActivity 10.112.3.83 activity4
+        refreshActivity 10.112.5.207 activity5
 
         # Sleep a bit so nginx can catch up
         sleep 10
