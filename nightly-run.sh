@@ -169,6 +169,24 @@ EOF
 
 }
 
+## Refresh the Preview processor node.
+function refreshPreviewProcessor {
+        # $1 : Host IP
+        # $2 : Cert Name (e.g., db0)
+
+        refreshPuppet root $1 $2
+
+        # switch the branch to the desired one in the init.pp script
+        ssh -t root@$1 << EOF
+                sed -i '' "s/\\\$app_git_user .*/\\\$app_git_user = '$APP_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
+                sed -i '' "s/\\\$app_git_branch .*/\\\$app_git_branch = '$APP_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
+                sed -i '' "s/\\\$ux_git_user .*/\\\$ux_git_user = '$UX_REMOTE'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
+                sed -i '' "s/\\\$ux_git_branch .*/\\\$ux_git_branch = '$UX_BRANCH'/g" ~/puppet-hilary/environments/performance/modules/localconfig/manifests/init.pp;
+EOF
+        ssh -t root@$1 ". ~/.profile && /root/puppet-hilary/clean-scripts/ppnode.sh"
+}
+
+
 ###############
 ## EXECUTION ##
 ###############
@@ -233,6 +251,8 @@ if $START_CLEAN_APP ; then
 
         # Sleep a bit so nginx can catch up
         sleep 10
+
+        refreshPreviewProcessor 10.112.6.119 pp0
 fi
 
 if $START_CLEAN_WEB ; then
