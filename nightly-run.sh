@@ -29,11 +29,11 @@ TENANT_ALIAS='cam'
 CIRCONUS_AUTH_TOKEN="46c8c856-5912-4da2-c2b7-a9612d3ba949"
 CIRCONUS_APP_NAME="oae-nightly-run"
 
-PUPPET_REMOTE='sakaiproject'
-PUPPET_BRANCH='master'
+PUPPET_REMOTE='simong'
+PUPPET_BRANCH='pp'
 
-APP_REMOTE='sakaiproject'
-APP_BRANCH='master'
+APP_REMOTE='simong'
+APP_BRANCH='pp'
 
 UX_REMOTE='sakaiproject'
 UX_BRANCH='Hilary'
