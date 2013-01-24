@@ -33,7 +33,7 @@ PUPPET_REMOTE='simong'
 PUPPET_BRANCH='pp'
 
 APP_REMOTE='simong'
-APP_BRANCH='pp'
+APP_BRANCH='previews'
 
 UX_REMOTE='sakaiproject'
 UX_BRANCH='Hilary'
