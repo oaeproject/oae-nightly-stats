@@ -10,6 +10,8 @@ START_CLEAN_DB=true
 START_CLEAN_WEB=true
 START_CLEAN_SEARCH=true
 
+RUN_DATALOAD=false
+
 LOG_DIR=/var/www/`date +"%Y/%m/%d/%H/%M"`
 TEST_LABEL=$1
 
@@ -294,6 +296,11 @@ curl --cookie connect.sid=${ADMIN_COOKIE} -d"oae-content/default-content-copyrig
   -d"oae-content/storage/amazons3-region=${STORAGE_AMAZON_REGION}" \
   -d"oae-content/storage/amazons3-bucket=${STORAGE_AMAZON_BUCKET}" http://${ADMIN_HOST}/api/config
 
+
+if [[ ! RUN_DATALOAD ]] ; then
+    echo "Running a dataload is not required. Stopping script."
+    exit 0
+fi
 
 
 # Model loader
