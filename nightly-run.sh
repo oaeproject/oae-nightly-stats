@@ -29,14 +29,14 @@ TENANT_ALIAS='cam'
 CIRCONUS_AUTH_TOKEN="46c8c856-5912-4da2-c2b7-a9612d3ba949"
 CIRCONUS_APP_NAME="oae-nightly-run"
 
-PUPPET_REMOTE='simong'
-PUPPET_BRANCH='pp'
+PUPPET_REMOTE='sakaiproject'
+PUPPET_BRANCH='paris2013'
 
-APP_REMOTE='simong'
-APP_BRANCH='previews'
+APP_REMOTE='sakaiproject'
+APP_BRANCH='paris2013'
 
 UX_REMOTE='sakaiproject'
-UX_BRANCH='Hilary'
+UX_BRANCH='paris2013'
 
 # Backend options are: 'local' or 'amazons3'
 STORAGE_BACKEND='local'
