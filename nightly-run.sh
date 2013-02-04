@@ -24,8 +24,8 @@ LOAD_NR_OF_CONTENT=5000
 # Admin host
 ADMIN_HOST='admin.oae-performance.sakaiproject.org'
 # Tenant host
-TENANT_HOST='cam.oae-performance.sakaiproject.org'
-TENANT_ALIAS='cam'
+TENANT_HOST='test.oae-performance.sakaiproject.org'
+TENANT_ALIAS='test'
 
 # Circonus configuration
 CIRCONUS_AUTH_TOKEN="46c8c856-5912-4da2-c2b7-a9612d3ba949"
@@ -220,16 +220,10 @@ if $START_CLEAN_DB ; then
         shutdownDb 10.112.4.124 db0
         shutdownDb 10.112.4.125 db1
         shutdownDb 10.112.4.126 db2
-        shutdownDb 10.112.7.55 db3
-        shutdownDb 10.112.3.238 db4
-        shutdownDb 10.112.1.251 db5
 
         refreshDb 10.112.4.124
         refreshDb 10.112.4.125
         refreshDb 10.112.4.126
-        refreshDb 10.112.7.55
-        refreshDb 10.112.3.238
-        refreshDb 10.112.1.251
 
 fi
 
@@ -247,14 +241,11 @@ if $START_CLEAN_APP ; then
         refreshActivity 10.112.6.85 activity0
         refreshActivity 10.112.5.198 activity1
         refreshActivity 10.112.3.29 activity2
-        refreshActivity 10.112.1.113 activity3
-        refreshActivity 10.112.3.83 activity4
-        refreshActivity 10.112.5.207 activity5
 
         # Sleep a bit so nginx can catch up
         sleep 10
 
-        refreshPreviewProcessor 10.112.6.119 pp0
+        #refreshPreviewProcessor 10.112.6.119 pp0
 fi
 
 if $START_CLEAN_WEB ; then
@@ -277,7 +268,7 @@ ADMIN_COOKIE=$(curl -s --cookie-jar - -d"username=administrator" -d"password=adm
 
 # Create a tenant.
 # In case we start from a snapshot, this will fail.
-curl --cookie connect.sid=${ADMIN_COOKIE} -d"alias=${TENANT_ALIAS}" -d"name=Cambridge" -d"host=${TENANT_HOST}" http://${ADMIN_HOST}/api/tenant/create
+curl --cookie connect.sid=${ADMIN_COOKIE} -d"alias=${TENANT_ALIAS}" -d"name=Test Tenant" -d"host=${TENANT_HOST}" http://${ADMIN_HOST}/api/tenant/create
 
 # Turn reCaptcha checking off.
 curl --cookie connect.sid=${ADMIN_COOKIE} -d"oae-principals/recaptcha/enabled=false" http://${ADMIN_HOST}/api/config
@@ -334,6 +325,8 @@ LOAD_REQUESTS=$(grep 'Requests made:' ${LOG_DIR}/loaddata.txt | tail -n 1 | cut 
 curl -H "X-Circonus-Auth-Token: ${CIRCONUS_AUTH_TOKEN}" -H "X-Circonus-App-Name: ${CIRCONUS_APP_NAME}" -d"annotations=[{\"title\": \"Data load\", \"description\": \"Loading the generated data into the system.\", \"category\": \"nightly\", \"start\": ${START}, \"stop\": ${END} }]"  https://circonus.com/api/json/annotation
 echo "Load ended at: " `date`
 
+
+exit 0
 
 # Sleep a bit so that all files are closed.
 sleep 30
