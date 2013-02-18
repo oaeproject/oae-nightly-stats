@@ -241,6 +241,9 @@ if $START_CLEAN_APP ; then
         refreshActivity 10.112.6.85 activity0
         refreshActivity 10.112.5.198 activity1
         refreshActivity 10.112.3.29 activity2
+        refreshActivity 10.112.2.238 activity3
+        refreshActivity 10.112.7.213 activity4
+        refreshActivity 10.112.3.11 activity5
 
         # Sleep a bit so nginx can catch up
         sleep 10
