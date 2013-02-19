@@ -10,8 +10,6 @@ START_CLEAN_DB=true
 START_CLEAN_WEB=true
 START_CLEAN_SEARCH=true
 
-RUN_DATALOAD=false
-
 LOG_DIR=/var/www/`date +"%Y/%m/%d/%H/%M"`
 TEST_LABEL=$1
 
@@ -23,22 +21,24 @@ LOAD_NR_OF_CONTENT=5000
 
 # Admin host
 ADMIN_HOST='admin.oae-performance.sakaiproject.org'
+
 # Tenant host
-TENANT_HOST='test.oae-performance.sakaiproject.org'
-TENANT_ALIAS='test'
+TENANT_ALIAS='oae'
+TENANT_NAME='Open Academic Environment'
+TENANT_HOST="${TENANT_ALIAS}.oae-performance.sakaiproject.org"
 
 # Circonus configuration
 CIRCONUS_AUTH_TOKEN="46c8c856-5912-4da2-c2b7-a9612d3ba949"
 CIRCONUS_APP_NAME="oae-nightly-run"
 
 PUPPET_REMOTE='sakaiproject'
-PUPPET_BRANCH='paris2013'
+PUPPET_BRANCH='master'
 
 APP_REMOTE='sakaiproject'
-APP_BRANCH='paris2013'
+APP_BRANCH='master'
 
 UX_REMOTE='sakaiproject'
-UX_BRANCH='paris2013'
+UX_BRANCH='Hilary'
 
 # Backend options are: 'local' or 'amazons3'
 STORAGE_BACKEND='local'
@@ -241,9 +241,6 @@ if $START_CLEAN_APP ; then
         refreshActivity 10.112.6.85 activity0
         refreshActivity 10.112.5.198 activity1
         refreshActivity 10.112.3.29 activity2
-        refreshActivity 10.112.2.238 activity3
-        refreshActivity 10.112.7.213 activity4
-        refreshActivity 10.112.3.11 activity5
 
         # Sleep a bit so nginx can catch up
         sleep 10
@@ -271,30 +268,19 @@ ADMIN_COOKIE=$(curl -s --cookie-jar - -d"username=administrator" -d"password=adm
 
 # Create a tenant.
 # In case we start from a snapshot, this will fail.
-curl --cookie connect.sid=${ADMIN_COOKIE} -d"alias=${TENANT_ALIAS}" -d"name=Test Tenant" -d"host=${TENANT_HOST}" http://${ADMIN_HOST}/api/tenant/create
+curl --cookie connect.sid=${ADMIN_COOKIE} -d"alias=${TENANT_ALIAS}" -d"name=${TENANT_NAME}" -d"host=${TENANT_HOST}" http://${ADMIN_HOST}/api/tenant/create
 
 # Turn reCaptcha checking off.
 curl --cookie connect.sid=${ADMIN_COOKIE} -d"oae-principals/recaptcha/enabled=false" http://${ADMIN_HOST}/api/config
 
-# Configure the storage backend
-curl --cookie connect.sid=${ADMIN_COOKIE} -d"oae-content/default-content-copyright/defaultcopyright=nocopyright" \
-  -d"oae-content/contentpermissions/defaultaccess=public" \
-  -d"oae-content/documentpermissions/defaultaccess=public" \
-  -d"oae-content/linkpermissions/defaultaccess=public" \
-  -d"oae-content/collectionpermissions/defaultaccess=public" \
-  -d"oae-content/default-content-privacy/defaultprivacy=everyone" \
-  -d"oae-content/storage/backend=${STORAGE_BACKEND}" \
-  -d"oae-content/storage/local-dir=${STORAGE_LOCAL_DIR}" \
-  -d"oae-content/storage/amazons3-access-key=${STORAGE_AMAZON_ACCESS_KEY}" \
-  -d"oae-content/storage/amazons3-secret-key=${STORAGE_AMAZON_SECRET_KEY}" \
-  -d"oae-content/storage/amazons3-region=${STORAGE_AMAZON_REGION}" \
-  -d"oae-content/storage/amazons3-bucket=${STORAGE_AMAZON_BUCKET}" http://${ADMIN_HOST}/api/config
+curl --cookie connect.sid=${ADMIN_COOKIE} \
+    -d"oae-content/storage/backend=${STORAGE_BACKEND}" \
+    -d"oae-content/storage/local-dir=${STORAGE_LOCAL_DIR}" \
+    -d"oae-content/storage/amazons3-access-key=${STORAGE_AMAZON_ACCESS_KEY}" \
+    -d"oae-content/storage/amazons3-secret-key=${STORAGE_AMAZON_SECRET_KEY}" \
+    -d"oae-content/storage/amazons3-region=${STORAGE_AMAZON_REGION}" \
+    -d"oae-content/storage/amazons3-bucket=${STORAGE_AMAZON_BUCKET}" http://${ADMIN_HOST}/api/config
 
-
-if [[ ! RUN_DATALOAD ]] ; then
-    echo "Running a dataload is not required. Stopping script."
-    exit 0
-fi
 
 
 # Model loader
