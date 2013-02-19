@@ -1,7 +1,7 @@
 {
     "suite": "standard",
     "clients": ["localhost"],
-    "servers": ["cam.oae-performance.sakaiproject.org:80"],
+    "servers": ["oae.oae-performance.sakaiproject.org:80"],
     "phases": [
         {
             "durationUnit": "minute",
