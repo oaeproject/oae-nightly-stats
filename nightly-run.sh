@@ -144,7 +144,7 @@ function refreshRedis {
         # $2 : Cert Name (e.g., db0)
 
         refreshPuppet admin $1 $2
-        ssh -t admin@$1 "echo flushdb | redis-cli"
+        ssh -t admin@$1 puppet-hilary/clean-scripts/cacheclean.sh
 }
 
 function refreshSearch {
@@ -262,6 +262,7 @@ curl http://${TENANT_HOST}
 
 # Flush redis.
 refreshRedis 10.112.2.103 cache0
+refreshRedis 10.112.7.97 activity-cache
 
 # Get an admin session to play with.
 ADMIN_COOKIE=$(curl -s --cookie-jar - -d"username=administrator" -d"password=administrator" http://${ADMIN_HOST}/api/auth/login | grep connect.sid | cut -f 7)
