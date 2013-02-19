@@ -316,8 +316,6 @@ curl -H "X-Circonus-Auth-Token: ${CIRCONUS_AUTH_TOKEN}" -H "X-Circonus-App-Name:
 echo "Load ended at: " `date`
 
 
-exit 0
-
 # Sleep a bit so that all files are closed.
 sleep 30
 
