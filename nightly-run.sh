@@ -217,11 +217,11 @@ if $START_CLEAN_DB ; then
         # Stop the entire cassandra cluster
 
         # Run this first so we don't run the risk that the 2 other nodes start distributing data of the first node
-        shutdownDb 10.112.7.231 db0
+        shutdownDb 10.112.2.44 db0
         shutdownDb 10.112.7.44 db1
         shutdownDb 10.112.7.215 db2
 
-        refreshDb 10.112.7.231
+        refreshDb 10.112.2.44
         refreshDb 10.112.7.44
         refreshDb 10.112.7.215
 
