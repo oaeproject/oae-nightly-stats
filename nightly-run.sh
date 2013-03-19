@@ -48,7 +48,8 @@ STORAGE_AMAZON_SECRET_KEY='/TFoH3wKDQn5jq/4Gpk8FlZZAakeqtqBShyN8cJs'
 STORAGE_AMAZON_REGION='us-east-1'
 STORAGE_AMAZON_BUCKET='oae-performance-files'
 
-
+# How long (in seconds) to sleep to let activities generate before wiping out pending activities
+ACTIVITY_SLEEP=120
 
 # Increase the number of open files we can have.
 prctl -t basic -n process.max-file-descriptor -v 32678 $$
@@ -326,6 +327,13 @@ git pull
 npm update
 mkdir -p ${LOG_DIR}/tsung
 node --stack_size=2048 main.js -a /root/oae-nightly-stats/answers.json -s /root/OAE-model-loader/scripts -b ${LOAD_NR_OF_BATCHES} -o ${LOG_DIR}/tsung -m ${TSUNG_MAX_USERS} >> ${LOG_DIR}/package.txt 2>&1
+
+
+echo "Sleeping ${ACTIVITY_SLEEP} seconds before clearing activity cache"
+sleep $ACTIVITY_SLEEP
+
+# Clean out all pending activities before the performance test
+ssh -t admin@10.112.7.97 redis-cli flushall
 
 
 # Capture some graphs.
