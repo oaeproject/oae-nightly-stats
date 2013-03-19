@@ -257,24 +257,24 @@ fi
 refreshMq 10.112.5.189 mq0
 
 # Do a fake request to nginx to poke the balancers
-curl http://${ADMIN_HOST}
-curl http://${TENANT_HOST}
+curl -e "/" http://${ADMIN_HOST}
+curl -e "/" http://${TENANT_HOST}
 
 # Flush redis.
 refreshRedis 10.112.2.103 cache0
 refreshRedis 10.112.7.97 activity-cache
 
 # Get an admin session to play with.
-ADMIN_COOKIE=$(curl -s --cookie-jar - -d"username=administrator" -d"password=administrator" http://${ADMIN_HOST}/api/auth/login | grep connect.sid | cut -f 7)
+ADMIN_COOKIE=$(curl -s -e "/" --cookie-jar - -d"username=administrator" -d"password=administrator" http://${ADMIN_HOST}/api/auth/login | grep connect.sid | cut -f 7)
 
 # Create a tenant.
 # In case we start from a snapshot, this will fail.
-curl --cookie connect.sid=${ADMIN_COOKIE} -d"alias=${TENANT_ALIAS}" -d"name=${TENANT_NAME}" -d"host=${TENANT_HOST}" http://${ADMIN_HOST}/api/tenant/create
+curl -e "/" --cookie connect.sid=${ADMIN_COOKIE} -d"alias=${TENANT_ALIAS}" -d"name=${TENANT_NAME}" -d"host=${TENANT_HOST}" http://${ADMIN_HOST}/api/tenant/create
 
 # Turn reCaptcha checking off.
-curl --cookie connect.sid=${ADMIN_COOKIE} -d"oae-principals/recaptcha/enabled=false" http://${ADMIN_HOST}/api/config
+curl -e "/" --cookie connect.sid=${ADMIN_COOKIE} -d"oae-principals/recaptcha/enabled=false" http://${ADMIN_HOST}/api/config
 
-curl --cookie connect.sid=${ADMIN_COOKIE} \
+curl -e "/" --cookie connect.sid=${ADMIN_COOKIE} \
     -d"oae-content/storage/backend=${STORAGE_BACKEND}" \
     -d"oae-content/storage/local-dir=${STORAGE_LOCAL_DIR}" \
     -d"oae-content/storage/amazons3-access-key=${STORAGE_AMAZON_ACCESS_KEY}" \
